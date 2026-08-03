@@ -1,35 +1,56 @@
 <script setup>
-// 검색어(searchQuery)는 부모(WeatherParent)의 반응형 데이터를 props 로 전달받아 "표시"만 한다.
-// 입력이 바뀌면 값을 들고 있지 않고 update-query 이벤트로 부모에게 그대로 전달한다.
-defineProps({
-  searchQuery: { type: String, required: true },
-})
+// v-model.trim.lazy="searchQuery" 로 부모(WeatherParent)와 진짜 v-model 을 맺는다.
+// defineModel 은 modelModifiers 를 두 번째 반환값으로 노출하므로, 그 값을 직접 해석해서
+// trim / lazy 를 수동으로 구현한다. (네이티브 <input> 이 아니라 커스텀 컴포넌트라
+// 이 모디파이어들이 자동 적용되지 않는다.)
+const [searchQuery, modifiers] = defineModel({ type: String, required: true })
 
-const emit = defineEmits(['update-query', 'select-first'])
+const emit = defineEmits(['select-first'])
 
-// :value + @input 조합이 곧 v-model 의 내부 동작이다.
+const commitValue = (rawValue) => {
+  searchQuery.value = modifiers.trim ? rawValue.trim() : rawValue
+}
+
+// lazy 모디파이어가 있으면 input(타이핑 즉시) 대신 change(포커스 아웃) 시점에만 반영한다.
 const handleInput = (event) => {
-  emit('update-query', event.target.value)
+  if (modifiers.lazy) return
+  commitValue(event.target.value)
+}
+
+const handleChange = (event) => {
+  if (!modifiers.lazy) return
+  commitValue(event.target.value)
+}
+
+// Enter 는 "지금 입력값으로 검색해줘"라는 명시적 커밋 의도이므로,
+// lazy 라서 아직 반영 안 된 값이 있어도 select-first 이전에 강제로 flush 한다.
+const handleEnter = (event) => {
+  commitValue(event.target.value)
+  emit('select-first')
 }
 
 const handleReset = () => {
-  emit('update-query', '')
+  searchQuery.value = ''
 }
 </script>
 
 <template>
   <div class="search-row">
     <!--
-      한글은 자음·모음이 조합되는 IME 입력이라 v-model 대신
-      :value + @input 을 직접 엮어 조합 과정을 그대로 반영한다.
+      v-model.trim.lazy 적용: 타이핑 도중(input)에는 반영하지 않고 포커스 아웃(change)
+      시점에만 searchQuery 를 갱신한다. 한글 IME 조합 중간 상태가 그대로 change 로
+      넘어오므로 조합 자체는 깨지지 않지만, 매 keystroke 마다 갱신되던 예전
+      (:value + @input) 방식과 달리 필터링/로그가 "포커스를 벗어나거나 Enter 를 누를 때"
+      까지 지연된다.
     -->
     <input
       type="text"
       :value="searchQuery"
       @input="handleInput"
-      @keyup.enter="emit('select-first')"
+      @change="handleChange"
+      @keyup.enter="handleEnter"
       @keyup.esc="handleReset"
-      placeholder="도시 이름 입력 (Enter: 첫 결과 선택 / Esc: 초기화)"
+      placeholder="도시 이름 입력 (Enter: 첫 결과 선택 / Esc: 초기화, 포커스 아웃 시 반영)"
     />
     <!-- 검색어가 없으면 누를 이유가 없으므로 비활성화 -->
     <button class="btn-ghost" :disabled="searchQuery.length === 0" @click="handleReset">

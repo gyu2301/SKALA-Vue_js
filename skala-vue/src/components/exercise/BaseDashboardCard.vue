@@ -8,8 +8,13 @@ defineProps({
 
 <template>
   <section class="dashboard-card">
-    <h3>{{ title }}</h3>
+    <!-- header 슬롯: 기본은 title prop 을 그대로 보여주지만, 부모가 원하면 완전히 대체할 수 있다. -->
+    <slot name="header" :title="title">
+      <h3>{{ title }}</h3>
+    </slot>
     <slot />
+    <!-- footer 슬롯: 기본 콘텐츠 없음. 채우지 않으면 아무것도 렌더링되지 않는다. -->
+    <slot name="footer" />
   </section>
 </template>
 

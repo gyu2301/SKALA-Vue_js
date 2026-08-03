@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onUpdated } from 'vue'
 
 // 선택된 도시 객체(city)를 props 로 전달받아 표시만 한다.
 // 이 카드가 현재 선택된 카드인지 여부(isSelected)도 부모의 selectedCityId 로부터 계산되어 넘어온다.
@@ -11,6 +11,7 @@ const props = defineProps({
 const emit = defineEmits(['select-card', 'click-detail'])
 
 const HOT_THRESHOLD = 25
+const MILD_THRESHOLD = 20
 const GAUGE_MAX_TEMP = 40
 
 // 기온을 막대 길이(%)와 색상으로 표현한다.
@@ -20,6 +21,21 @@ const gaugeStyle = computed(() => {
     width: `${Math.round(ratio * 100)}%`,
     backgroundColor: props.city.temp >= HOT_THRESHOLD ? '#ff7675' : '#74b9ff',
   }
+})
+
+// 카드 선택(select-card) 버블링을 막고 상세보기(click-detail)를 emit한다.
+// 슬롯으로 넘겨줘서 부모의 커스텀 버튼도 같은 방식으로 동작하게 한다.
+const onDetail = (event) => {
+  event?.stopPropagation()
+  emit('click-detail', props.city)
+}
+
+// v-memo 효과 확인용: 이 카드가 실제로 리렌더링(패치)될 때마다 콘솔에 남긴다.
+// WeatherParent 에서 v-memo="[city.id === selectedCityId]" 를 걸어두면,
+// 이 카드의 선택 여부가 안 바뀌는 한 다른 카드가 선택되거나 도움말이 토글돼도
+// 이 로그가 찍히지 않아야 한다.
+onUpdated(() => {
+  console.log(`[onUpdated] ${props.city.name} 카드 리렌더링`)
 })
 </script>
 
@@ -34,14 +50,20 @@ const gaugeStyle = computed(() => {
     <p>현재 기온: {{ city.temp }}°C</p>
 
     <span v-if="city.temp >= HOT_THRESHOLD" class="badge hot">더움 (25도 이상)</span>
-    <span v-else class="badge cool">선선함 (25도 미만)</span>
+    <span v-else-if="city.temp >= MILD_THRESHOLD" class="badge mild">보통 (20~24도)</span>
+    <span v-else class="badge cool">선선함 (20도 미만)</span>
 
     <div class="gauge-track">
       <div class="gauge-fill" :style="gaugeStyle"></div>
     </div>
 
-    <!-- .stop으로 부모 카드의 @click(select-card) 까지 함께 실행되는걸 방지 -->
-    <button class="btn-detail" @click.stop="emit('click-detail', city)">상세보기</button>
+    <!--
+      detail-button 슬롯: 부모가 상세보기 버튼 영역을 커스터마이징할 수 있다.
+      onDetail 이 event.stopPropagation() 까지 처리해주므로 부모는 @click="onDetail" 만 연결하면 된다.
+    -->
+    <slot name="detail-button" :city="city" :is-selected="isSelected" :on-detail="onDetail">
+      <button class="btn-detail" @click="onDetail">상세보기</button>
+    </slot>
   </div>
 </template>
 
@@ -78,6 +100,9 @@ const gaugeStyle = computed(() => {
 }
 .hot {
   background-color: #ff7675;
+}
+.mild {
+  background-color: #fdcb6e;
 }
 .cool {
   background-color: #74b9ff;
