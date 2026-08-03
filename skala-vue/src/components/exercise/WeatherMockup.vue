@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Vue.js 종합실습과제 1 : 날씨 Mockup (Day 1, 일부 Day 2 반영)
+ * Vue.js 종합실습과제 1 : 날씨 Mockup (Day 1 + Day 2)
  * ------------------------------------------------------------------------
  * [기본 요구사항]
  *   1) v-for + :key         → 날씨 카드 반복 렌더링
@@ -9,19 +9,38 @@
  *   4) @click / @click.stop → 카드 선택 및 버블링 차단 상세보기
  *
  * [추가 구현] 1일차에 배운 문법 범위 안에서 자율 확장
- *   ① 실시간 검색 필터링       : <template v-for> + v-if
- *   ② 선택 카드 하이라이트      : :class 객체 바인딩
- *   ③ 기온 게이지 바           : :style 객체 바인딩
- *   ④ 도움말 패널 토글         : v-show (v-if 와의 선택 근거는 template 주석 참고)
- *   ⑤ 키보드 단축키            : @keyup.enter / @keyup.esc
- *   ⑥ 여백 클릭 시 선택 해제    : @click.self
- *   ⑦ 초기화 버튼 활성 제어     : :disabled 바인딩
- *   ⑧ 정적 안내문 렌더 최적화   : v-once
- *   ⑨ 신규 스타일 격리         : <style scoped>
- *   ⑩ 검색 결과 없음 판정       : computed (Day 2 문법으로 리팩터링)
+ *   ① 선택 카드 하이라이트      : :class 객체 바인딩
+ *   ② 기온 게이지 바           : :style 객체 바인딩
+ *   ③ 도움말 패널 토글         : v-show (v-if 와의 선택 근거는 template 주석 참고)
+ *   ④ 키보드 단축키            : @keyup.enter / @keyup.esc
+ *   ⑤ 여백 클릭 시 선택 해제    : @click.self
+ *   ⑥ 초기화 버튼 활성 제어     : :disabled 바인딩
+ *   ⑦ 정적 안내문 렌더 최적화   : v-once
+ *   ⑧ 신규 스타일 격리         : <style scoped>
+ *
+ * [Day 2 변경사항] computed / watch / watchEffect 도입
+ *   ① filteredWeatherList (computed)
+ *      - 기존엔 템플릿에서 <template v-for> + v-if="isMatched(city)" 로
+ *        "반복하면서 걸러내는" 방식이었다.
+ *      - 이를 걷어내고, searchQuery 로 걸러진 결과를 미리 계산해두는
+ *        computed 배열로 교체했다. 템플릿은 이제 필터링 결과만 그대로 v-for.
+ *      - 검색어가 비어 있으면 모든 name.includes('') === true 이므로
+ *        원본 목록이 그대로 반환된다 → "검색어 없을 때 원본 출력" 요구사항을
+ *        별도 분기 없이 자연스럽게 만족.
+ *   ② 기존 isMatched() / hasNoResult computed 는 제거
+ *      - "결과 없음" 판정은 filteredWeatherList.length === 0 으로 대체.
+ *      - selectFirstMatch() 도 filteredWeatherList 를 직접 참조하도록 변경.
+ *   ③ watch(selectedCityInfo) 추가
+ *      - 상태바 문구(selectedCityInfo)가 바뀔 때마다 콘솔 로그 출력.
+ *      - watchEffect 대신 watch 를 쓴 이유: 이전 값(oldVal)과 새 값(newVal)을
+ *        둘 다 비교해서 로그로 남기고 싶었고, 감시 대상도 selectedCityInfo
+ *        하나로 명확하기 때문 (watch 는 감시 대상을 명시적으로 지정).
+ *   ④ watchEffect(searchQuery 추적) 추가
+ *      - 콜백 안에서 searchQuery.value 를 읽는 순간 자동으로 의존성 등록.
+ *      - 타이핑할 때마다(=searchQuery 가 바뀔 때마다) 즉시 콘솔 로그.
  * ------------------------------------------------------------------------
  */
-import { ref, computed } from 'vue'
+import { ref, computed, watch, watchEffect } from 'vue'
 
 /* ─── 1. Mock 데이터 ───────────────────────────────────────────── */
 const weatherList = ref([
@@ -60,13 +79,8 @@ const clearSelection = () => {
 
 // 상세보기. 인자를 (이름, 상태)로 나열하는 대신 도시 객체 하나만 받도록 했다.
 // 표시 항목이 늘어나도 함수 시그니처를 고치지 않아도 된다.
-// 브라우저 기본 alert() 은 디자인을 입힐 수 없어서, 같은 톤의 패널로 대체했다.
-const detailCity = ref(null)
 const showDetail = (city) => {
-  detailCity.value = city
-}
-const closeDetail = () => {
-  detailCity.value = null
+  window.alert(`${city.name}\n현재 기온: ${city.temp}°C\n날씨 상태: ${city.status}`)
 }
 
 // :value + @input 조합이 곧 v-model 의 내부 동작이다.
@@ -79,18 +93,27 @@ const resetQuery = () => {
   searchQuery.value = ''
 }
 
-// [추가] 검색어 포함 여부. 앞뒤 공백은 잘라내고 비교한다.
-const isMatched = (city) => city.name.includes(searchQuery.value.trim())
-
-// [추가] 필터 결과가 0건인지 판정
-// searchQuery, weatherList 에 의존하는 파생값이라 computed 로 캐싱한다.
-const hasNoResult = computed(() => weatherList.value.every((city) => !isMatched(city)))
+// [Day 2] searchQuery 로 걸러진 도시 목록.
+// name.includes('') 는 항상 true 이므로 검색어가 비어있으면 원본 그대로 반환된다.
+const filteredWeatherList = computed(() =>
+  weatherList.value.filter((city) => city.name.includes(searchQuery.value.trim())),
+)
 
 // [추가] Enter 를 누르면 검색 결과 중 첫 번째 도시를 자동 선택
 const selectFirstMatch = () => {
-  const matched = weatherList.value.filter(isMatched)
-  if (matched.length > 0) selectCity(matched[0])
+  if (filteredWeatherList.value.length > 0) selectCity(filteredWeatherList.value[0])
 }
+
+// [Day 2] 상태바 문구가 바뀔 때마다 이전/이후 값을 로그로 남긴다.
+watch(selectedCityInfo, (newInfo, oldInfo) => {
+  console.log('[watch] selectedCityInfo 변경:', oldInfo, '→', newInfo)
+})
+
+// [Day 2] 콜백 안에서 읽은 반응형 값(searchQuery)을 자동 추적한다.
+// 타이핑할 때마다 즉시 실행된다.
+watchEffect(() => {
+  console.log('[watchEffect] searchQuery:', searchQuery.value)
+})
 
 // [추가] 기온을 막대 길이(%)와 색상으로 표현한다.
 const gaugeStyle = (temp) => {
@@ -144,7 +167,7 @@ const gaugeStyle = (temp) => {
       <div v-show="isHelpOpen" class="help-panel">
         <!-- [추가] 절대 바뀌지 않는 문구라 v-once 로 감시 대상에서 제외 -->
         <p v-once>· 카드를 클릭하면 하단 상태바에 선택한 도시가 표시됩니다.</p>
-        <p v-once>· [상세보기]는 카드 선택 없이 상세 정보 패널만 띄웁니다. (버블링 차단)</p>
+        <p v-once>· [상세보기]는 카드 선택 없이 alert 창만 띄웁니다. (버블링 차단)</p>
         <p v-once>· 카드 바깥 여백을 클릭하면 선택이 해제됩니다.</p>
       </div>
     </section>
@@ -154,68 +177,41 @@ const gaugeStyle = (temp) => {
       <h3>지역별 날씨 현황</h3>
 
       <!-- [추가] .self : 카드가 아니라 그리드의 빈 여백을 '직접' 눌렀을 때만 발동 -->
+      <!-- [Day 2] weatherList 대신 computed 로 미리 걸러둔 filteredWeatherList 를 순회한다.
+           v-if 로 카드마다 다시 걸러낼 필요가 없어져 <template v-for> 래퍼도 함께 제거했다. -->
       <div class="weather-grid" @click.self="clearSelection">
-        <!--
-          [추가] Vue 3 는 같은 태그에서 v-if 를 v-for 보다 먼저 평가하므로 <div v-for v-if> 로 쓰면 반복 변수를 읽지 못한다.
-          (ESLint 규칙 vue/no-use-v-if-with-v-for 위반)
-          그래서 <template v-for> 로 감싸고 안쪽 카드에 v-if 를 걸었다.
-        -->
-        <template v-for="city in weatherList" :key="city.id">
-          <div
-            v-if="isMatched(city)"
-            class="weather-card"
-            :class="{ 'is-selected': city.id === selectedCityId }"
-            :title="`${city.name}의 현재 상태: ${city.status}`"
-            @click="selectCity(city)"
-          >
-            <h4>{{ city.name }} ({{ city.status }})</h4>
-            <p>현재 기온: {{ city.temp }}°C</p>
+        <div
+          v-for="city in filteredWeatherList"
+          :key="city.id"
+          class="weather-card"
+          :class="{ 'is-selected': city.id === selectedCityId }"
+          :title="`${city.name}의 현재 상태: ${city.status}`"
+          @click="selectCity(city)"
+        >
+          <h4>{{ city.name }} ({{ city.status }})</h4>
+          <p>현재 기온: {{ city.temp }}°C</p>
 
-            <span v-if="city.temp >= HOT_THRESHOLD" class="badge hot">더움 (25도 이상)</span>
-            <span v-else class="badge cool">선선함 (25도 미만)</span>
+          <span v-if="city.temp >= HOT_THRESHOLD" class="badge hot">더움 (25도 이상)</span>
+          <span v-else class="badge cool">선선함 (25도 미만)</span>
 
-            <!-- [추가] 기온을 한눈에 비교할 수 있는 게이지 -->
-            <div class="gauge-track">
-              <div class="gauge-fill" :style="gaugeStyle(city.temp)"></div>
-            </div>
-
-            <!-- .stop으로 부모 카드의 @click 까지 함께 실행되는걸 방지 -->
-            <button class="btn-detail" @click.stop="showDetail(city)">상세보기</button>
+          <!-- [추가] 기온을 한눈에 비교할 수 있는 게이지 -->
+          <div class="gauge-track">
+            <div class="gauge-fill" :style="gaugeStyle(city.temp)"></div>
           </div>
-        </template>
+
+          <!-- .stop으로 부모 카드의 @click 까지 함께 실행되는걸 방지 -->
+          <button class="btn-detail" @click.stop="showDetail(city)">상세보기</button>
+        </div>
       </div>
 
-      <p v-if="hasNoResult" class="empty-message">
+      <!-- [Day 2] 검색 결과가 0건일 때만 안내 문구 출력 -->
+      <p v-if="filteredWeatherList.length === 0" class="empty-message">
         '{{ searchQuery }}'와 일치하는 도시가 없습니다. 다른 이름으로 검색해 보세요.
       </p>
     </section>
 
     <div class="status-bar">{{ selectedCityInfo }}</div>
   </div>
-
-  <!-- [추가] 상세보기 패널. 브라우저 기본 alert() 대신 같은 톤으로 디자인된 오버레이를 쓴다. -->
-  <Teleport to="body">
-    <Transition name="veil">
-      <div v-if="detailCity" class="detail-backdrop" @click.self="closeDetail">
-        <div
-          class="detail-panel"
-          role="dialog"
-          aria-modal="true"
-          :aria-label="`${detailCity.name} 상세 정보`"
-        >
-          <button class="detail-close" type="button" @click="closeDetail" aria-label="닫기">
-            ×
-          </button>
-          <p class="detail-eyebrow">현재 날씨</p>
-          <h4 class="detail-city">{{ detailCity.name }}</h4>
-          <p class="detail-temp">{{ detailCity.temp }}<span class="unit">°C</span></p>
-          <span class="badge" :class="detailCity.temp >= HOT_THRESHOLD ? 'hot' : 'cool'">
-            {{ detailCity.status }}
-          </span>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
 </template>
 
 <style scoped>
@@ -293,91 +289,5 @@ const gaugeStyle = (temp) => {
   text-align: center;
   color: #e74c3c;
   font-size: 14px;
-}
-
-/* 상세보기 패널 - 브라우저 기본 alert() 대신 같은 톤으로 디자인된 오버레이를 쓴다 */
-.detail-backdrop {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(44, 62, 80, 0.4);
-  z-index: 100;
-}
-.detail-panel {
-  position: relative;
-  width: 100%;
-  max-width: 280px;
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 26px 24px 22px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
-  text-align: center;
-}
-.detail-close {
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  padding: 4px 8px;
-  background: none;
-  border: none;
-  font-size: 18px;
-  line-height: 1;
-  color: #adb5bd;
-  cursor: pointer;
-}
-.detail-close:hover {
-  color: #2c3e50;
-}
-.detail-eyebrow {
-  font-size: 12px;
-  color: #6c757d;
-  margin: 0 0 6px;
-}
-.detail-city {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 4px;
-}
-.detail-temp {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 12px;
-  line-height: 1;
-}
-.detail-temp .unit {
-  font-size: 1.2rem;
-  color: #6c757d;
-  margin-left: 2px;
-}
-
-.veil-enter-active,
-.veil-leave-active {
-  transition: opacity 0.15s ease;
-}
-.veil-enter-active .detail-panel,
-.veil-leave-active .detail-panel {
-  transition: transform 0.15s ease;
-}
-.veil-enter-from,
-.veil-leave-to {
-  opacity: 0;
-}
-.veil-enter-from .detail-panel,
-.veil-leave-to .detail-panel {
-  transform: scale(0.96);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .veil-enter-active,
-  .veil-leave-active,
-  .veil-enter-active .detail-panel,
-  .veil-leave-active .detail-panel {
-    transition: none;
-  }
 }
 </style>
