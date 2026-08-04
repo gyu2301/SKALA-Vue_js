@@ -24,7 +24,15 @@ const handleChange = (event) => {
 
 // Enter 는 "지금 입력값으로 검색해줘"라는 명시적 커밋 의도이므로,
 // lazy 라서 아직 반영 안 된 값이 있어도 select-first 이전에 강제로 flush 한다.
+//
+// isComposing 가드: 한글/일본어 등 IME로 조합 중인 마지막 글자를 확정하려고 누른 Enter도
+// keyup.enter 로 감지된다. 이 경우를 그대로 처리하면 "조합 확정용 Enter"와 "그다음 실제
+// 제출용 Enter"가 겹쳐서 select-first 가 두 번 emit 되어(예: 도시 검색이 중복 실행됨) 버린다.
+// event.isComposing 이 true 인 시점의 Enter는 무시하고, 조합이 끝난 뒤의 Enter만 처리한다.
+// (이 버그의 전체 원인/해결 기록은 @/stores/weatherStore.js 의 pendingSearches 위 주석 참고)
 const handleEnter = (event) => {
+  if (event.isComposing) return
+
   commitValue(event.target.value)
   emit('select-first')
 }
@@ -50,7 +58,7 @@ const handleReset = () => {
       @change="handleChange"
       @keyup.enter="handleEnter"
       @keyup.esc="handleReset"
-      placeholder="도시 이름 입력 (Enter: 첫 결과 선택 / Esc: 초기화, 포커스 아웃 시 반영)"
+      placeholder="도시 이름 입력 (Enter: 첫 결과 선택, 없으면 실시간 검색 / Esc: 초기화)"
     />
     <!-- 검색어가 없으면 누를 이유가 없으므로 비활성화 -->
     <button class="btn-ghost" :disabled="searchQuery.length === 0" @click="handleReset">

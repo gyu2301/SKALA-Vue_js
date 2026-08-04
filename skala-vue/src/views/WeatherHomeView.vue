@@ -67,7 +67,8 @@ const windSegments = [
   { icon: '🌬️', text: `강풍 (${WIND_STRONG}m/s↑)`, color: 'rgba(52, 73, 94, 0.22)' },
 ]
 
-const { searchQuery, filteredWeatherList, isLoading, errorMessage } = useWeatherSearch()
+const { searchQuery, filteredWeatherList, isLoading, errorMessage, isSearching, searchErrorMessage, searchCity } =
+  useWeatherSearch()
 
 const selectedCityId = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.')
@@ -87,8 +88,17 @@ const showDetail = (city) => {
   router.push(`/weather/${city.id}`)
 }
 
-const selectFirstMatch = () => {
-  if (filteredWeatherList.value.length > 0) selectCity(filteredWeatherList.value[0])
+// 이미 불러온 도시 중에 일치하는 곳이 있으면 그중 첫 번째를 선택하고,
+// 없으면 OpenWeatherMap 에서 해당 이름(부분 입력 포함)의 도시를 검색해 목록에 추가한 뒤
+// 그중 첫 번째를 선택한다. searchCity는 최대 5개까지 배열로 결과를 돌려준다.
+const selectFirstMatch = async () => {
+  if (filteredWeatherList.value.length > 0) {
+    selectCity(filteredWeatherList.value[0])
+    return
+  }
+
+  const found = await searchCity(searchQuery.value)
+  if (found.length > 0) selectCity(found[0])
 }
 </script>
 
@@ -124,8 +134,14 @@ const selectFirstMatch = () => {
       </div>
 
       <template #footer>
-        <p v-if="!isLoading && !errorMessage && filteredWeatherList.length === 0" class="empty-message">
-          '{{ searchQuery }}'와 일치하는 도시가 없습니다. 다른 이름으로 검색해 보세요.
+        <p v-if="!isLoading && !errorMessage && isSearching" class="loading-message">
+          '{{ searchQuery }}' 도시를 OpenWeatherMap에서 검색하는 중입니다...
+        </p>
+        <p v-else-if="!isLoading && !errorMessage && searchErrorMessage" class="api-error" role="alert">
+          {{ searchErrorMessage }}
+        </p>
+        <p v-else-if="!isLoading && !errorMessage && filteredWeatherList.length === 0" class="empty-message">
+          '{{ searchQuery }}'와 일치하는 도시가 기본 목록에 없습니다. Enter를 눌러 다른 도시를 검색해 보세요.
         </p>
       </template>
     </BaseDashboardCard>

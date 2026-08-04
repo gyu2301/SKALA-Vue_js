@@ -1,4 +1,4 @@
-import { ref, computed, watchEffect, onMounted } from 'vue'
+import { ref, computed, watch, watchEffect, onMounted } from 'vue'
 import { useWeatherStore } from '@/stores/weatherStore'
 
 // 7. Axios : 도시 날씨 목록(weatherStore, OpenWeatherMap 연동) + 검색어 기반 필터링 로직을
@@ -27,11 +27,19 @@ export function useWeatherSearch() {
     console.log('[watchEffect] searchQuery:', searchQuery.value)
   })
 
+  // 검색어가 바뀌면 이전 검색(다른 도시 이름)에서 남은 에러 문구를 지운다.
+  watch(searchQuery, () => {
+    weatherStore.searchErrorMessage = ''
+  })
+
   return {
     weatherList,
     searchQuery,
     filteredWeatherList,
     isLoading: computed(() => weatherStore.isLoading),
     errorMessage: computed(() => weatherStore.errorMessage),
+    isSearching: computed(() => weatherStore.isSearching),
+    searchErrorMessage: computed(() => weatherStore.searchErrorMessage),
+    searchCity: weatherStore.searchCity,
   }
 }
