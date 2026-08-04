@@ -1,0 +1,472 @@
+:root {
+  --vue-green: #42b883;
+  --vue-green-dark: #087a55;
+  --vue-navy: #273849;
+  --purple: #7f56d9;
+  --ink: #182230;
+  --muted: #667085;
+  --line: #e4e7ec;
+  --surface: #ffffff;
+}
+
+.dashboard-shell {
+  width: min(1440px, 100%);
+  padding: 28px;
+  margin: 0 auto;
+  color: var(--ink);
+}
+
+.dashboard-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+  gap: 30px;
+  align-items: center;
+  padding: 34px 38px;
+  border: 1px solid rgba(66, 184, 131, 0.22);
+  border-radius: 24px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.98), rgba(239, 252, 247, 0.96)),
+    var(--surface);
+  box-shadow: 0 18px 50px rgba(39, 56, 73, 0.08);
+}
+
+.eyebrow,
+.challenge-label,
+.navigation-title > span {
+  color: var(--vue-green-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.header-copy h1 {
+  margin: 4px 0 7px;
+  color: var(--vue-navy);
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+
+.header-copy p,
+.challenge-heading p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.progress-card {
+  padding: 19px;
+  border: 1px solid #d6eee5;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.progress-summary,
+.progress-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.progress-summary > div {
+  display: grid;
+}
+
+.progress-summary span,
+.progress-footer small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.progress-summary strong {
+  color: #344054;
+  font-size: 15px;
+}
+
+.progress-summary b {
+  color: var(--vue-green-dark);
+  font-size: 24px;
+}
+
+.progress-track {
+  height: 9px;
+  margin: 13px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5eae8;
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--vue-green), #20a4a7);
+  transition: width 0.35s ease;
+}
+
+.progress-footer small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress-footer button {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border: 0;
+  background: transparent;
+  color: var(--vue-green-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  margin-top: 22px;
+}
+
+.challenge-navigation,
+.challenge-content {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(39, 56, 73, 0.06);
+}
+
+.challenge-navigation {
+  position: sticky;
+  top: 18px;
+  padding: 14px;
+}
+
+.navigation-title {
+  display: grid;
+  padding: 8px 9px 15px;
+}
+
+.navigation-title strong {
+  color: #344054;
+  font-size: 16px;
+}
+
+.challenge-navigation nav {
+  display: grid;
+  gap: 5px;
+}
+
+button.challenge-menu {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 20px;
+  gap: 9px;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: #475467;
+  text-align: left;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+button.challenge-menu:hover {
+  border-color: #dce8e4;
+  background: #f7faf9;
+  transform: translateX(2px);
+}
+
+button.challenge-menu.active {
+  border-color: #bde2d4;
+  background: #effaf6;
+  color: #075d42;
+}
+
+button.challenge-menu.completed:not(.active) {
+  color: #087a55;
+}
+
+.menu-number {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  place-items: center;
+  background: #f2f4f7;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.active .menu-number,
+.completed .menu-number {
+  background: var(--vue-green);
+  color: white;
+}
+
+.menu-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.menu-copy strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-copy small {
+  overflow: hidden;
+  color: #98a2b3;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-status {
+  color: #98a2b3;
+  font-weight: 800;
+  text-align: center;
+}
+
+.completed .menu-status {
+  color: var(--vue-green-dark);
+}
+
+.challenge-content {
+  min-width: 0;
+  padding: 28px;
+}
+
+.challenge-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.challenge-heading h2 {
+  margin: 2px 0 3px;
+  color: var(--vue-navy);
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.complete-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid #c9ded7;
+  border-radius: 10px;
+  background: #f5fbf9;
+  color: #24644f;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.complete-toggle input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--vue-green);
+}
+
+.challenge-examples {
+  padding-top: 8px;
+}
+
+.practice-section {
+  padding: 22px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 3px 12px rgba(16, 24, 40, 0.035);
+}
+
+.practice-section h2 {
+  padding-bottom: 9px;
+  margin: 0 0 14px;
+  border-bottom: 2px solid #eef2f1;
+  color: #344054;
+  font-size: 19px;
+  font-weight: 750;
+}
+
+.practice-section h3 {
+  margin: 19px 0 8px;
+  color: #475467;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.practice-section p {
+  overflow-wrap: anywhere;
+}
+
+.practice-section hr {
+  height: 1px;
+  margin: 18px 0;
+  border: 0;
+  background: var(--line);
+}
+
+button:not(.challenge-menu) {
+  padding: 7px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 650;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+button:not(.challenge-menu):not(:disabled):hover {
+  border-color: #98a2b3;
+  background: #f9fafb;
+  transform: translateY(-1px);
+}
+
+button.primary-action,
+.btn-external {
+  border-color: var(--vue-green-dark);
+  background: var(--vue-green-dark);
+  color: white;
+}
+
+button.primary-action:not(:disabled):hover,
+.btn-external:hover {
+  border-color: #075d42;
+  background: #075d42;
+  color: white;
+}
+
+button:disabled {
+  border-color: #eaecf0;
+  background: #f2f4f7;
+  color: #98a2b3;
+  cursor: not-allowed;
+}
+
+input:not([type='radio']):not([type='checkbox']),
+select,
+textarea {
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #344054;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--vue-green);
+  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.13);
+}
+
+.monitor {
+  padding: 13px 15px;
+  margin-top: 14px;
+  border: 1px solid;
+  border-radius: 10px;
+}
+
+.monitor p:last-child {
+  margin-bottom: 0;
+}
+
+.challenge-pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: center;
+  padding-top: 22px;
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.challenge-pagination button:last-child {
+  justify-self: end;
+}
+
+.challenge-pagination span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 1050px) {
+  .dashboard-header {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .challenge-navigation {
+    position: static;
+  }
+
+  .challenge-navigation nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .dashboard-shell {
+    padding: 14px;
+  }
+
+  .dashboard-header,
+  .challenge-content {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .challenge-navigation nav {
+    grid-template-columns: 1fr;
+  }
+
+  .challenge-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .progress-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .progress-footer small {
+    max-width: 100%;
+  }
+
+  .practice-section {
+    padding: 17px;
+  }
+
+  .challenge-pagination button {
+    min-height: 44px;
+  }
+}
