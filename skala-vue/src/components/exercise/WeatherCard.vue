@@ -1,5 +1,13 @@
 <script setup>
 import { computed, onUpdated } from 'vue'
+import {
+  HOT_THRESHOLD,
+  MILD_THRESHOLD,
+  HUMIDITY_HIGH,
+  HUMIDITY_LOW,
+  WIND_STRONG,
+  WIND_CALM,
+} from '@/constants/weatherThresholds'
 
 // 선택된 도시 객체(city)를 props 로 전달받아 표시만 한다.
 // 이 카드가 현재 선택된 카드인지 여부(isSelected)도 부모의 selectedCityId 로부터 계산되어 넘어온다.
@@ -10,9 +18,17 @@ const props = defineProps({
 
 const emit = defineEmits(['select-card', 'click-detail'])
 
-const HOT_THRESHOLD = 25
-const MILD_THRESHOLD = 20
 const GAUGE_MAX_TEMP = 40
+
+const STATUS_ICON = {
+  맑음: '☀️',
+  비: '🌧️',
+  구름: '☁️',
+  흐림: '🌥️',
+}
+
+// 날씨 상태 문구에 어울리는 이모지를 붙인다. 목록에 없는 상태는 기본 구름 아이콘으로 대체.
+const statusIcon = computed(() => STATUS_ICON[props.city.status] ?? '🌤️')
 
 // 기온을 막대 길이(%)와 색상으로 표현한다.
 const gaugeStyle = computed(() => {
@@ -21,6 +37,20 @@ const gaugeStyle = computed(() => {
     width: `${Math.round(ratio * 100)}%`,
     backgroundColor: props.city.temp >= HOT_THRESHOLD ? '#ff7675' : '#74b9ff',
   }
+})
+
+// 습도가 높을수록 물방울, 낮을수록 건조함을 직관적으로 표현한다.
+const humidityIcon = computed(() => {
+  if (props.city.humidity >= HUMIDITY_HIGH) return '💧'
+  if (props.city.humidity < HUMIDITY_LOW) return '🌵'
+  return '🌫️'
+})
+
+// 풍속이 강할수록 바람, 약할수록 잔잔함을 직관적으로 표현한다.
+const windIcon = computed(() => {
+  if (props.city.wind >= WIND_STRONG) return '🌬️'
+  if (props.city.wind < WIND_CALM) return '😌'
+  return '🍃'
 })
 
 // 카드 선택(select-card) 버블링을 막고 상세보기(click-detail)를 emit한다.
@@ -46,8 +76,9 @@ onUpdated(() => {
     :title="`${city.name}의 현재 상태: ${city.status}`"
     @click="emit('select-card', city)"
   >
-    <h4>{{ city.name }} ({{ city.status }})</h4>
+    <h4>{{ city.name }}</h4>
     <p>현재 기온: {{ city.temp }}°C</p>
+    <p class="status-line">{{ statusIcon }} {{ city.status }}</p>
 
     <span v-if="city.temp >= HOT_THRESHOLD" class="badge hot">더움 (25도 이상)</span>
     <span v-else-if="city.temp >= MILD_THRESHOLD" class="badge mild">보통 (20~24도)</span>
@@ -55,6 +86,11 @@ onUpdated(() => {
 
     <div class="gauge-track">
       <div class="gauge-fill" :style="gaugeStyle"></div>
+    </div>
+
+    <div class="stats-row">
+      <span class="stat-chip">{{ humidityIcon }} {{ city.humidity }}%</span>
+      <span class="stat-chip">{{ windIcon }} {{ city.wind }}m/s</span>
     </div>
 
     <!--
@@ -108,6 +144,12 @@ onUpdated(() => {
   background-color: #74b9ff;
 }
 
+.status-line {
+  margin: 2px 0 10px;
+  font-size: 13px;
+  color: #6c757d;
+}
+
 .gauge-track {
   height: 6px;
   margin-top: 10px;
@@ -121,6 +163,23 @@ onUpdated(() => {
   transition:
     width 0.3s ease,
     background-color 0.3s ease;
+}
+
+.stats-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 9px;
+  background: #eef6ff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
 }
 
 .btn-detail {
