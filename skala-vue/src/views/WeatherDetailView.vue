@@ -4,17 +4,28 @@
  * 동적 경로 매칭으로 전달된 cityId 를 기반으로 Mount 시점에 Mock 데이터에서
  * 해당 도시 객체를 선택해 보여준다.
  */
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWeatherSearch } from '@/composables/useWeatherSearch'
+import { useConfigStore } from '@/stores/configStore'
 
 const route = useRoute()
 const { weatherList } = useWeatherSearch()
+const configStore = useConfigStore()
 
 const city = ref(null)
 
 onMounted(() => {
   city.value = weatherList.value.find((item) => item.id === route.params.cityId) ?? null
+})
+
+// 화면 표시용 기온. Mock 데이터(city.temp)는 항상 섭씨 원본이며, 단위 설정에 맞춰 변환해 보여준다.
+const displayTemp = computed(() => {
+  if (!city.value) return null
+  if (configStore.unit === 'fahrenheit') {
+    return Math.round((city.value.temp * 9) / 5 + 32)
+  }
+  return city.value.temp
 })
 </script>
 
@@ -27,7 +38,7 @@ onMounted(() => {
         <p>
           📍 지정 지역: <strong>{{ city.address }}</strong>
         </p>
-        <p>실시간 기온: {{ city.temp }}°C</p>
+        <p>실시간 기온: {{ displayTemp }}{{ configStore.unitSymbol }}</p>
         <p>기상 현황: {{ city.status }}</p>
         <p>대기 습도: {{ city.humidity }}%</p>
         <p>현재 풍속: {{ city.wind }}m/s</p>

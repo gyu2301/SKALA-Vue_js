@@ -8,6 +8,9 @@ import {
   WIND_STRONG,
   WIND_CALM,
 } from '@/constants/weatherThresholds'
+import { useConfigStore } from '@/stores/configStore'
+
+const configStore = useConfigStore()
 
 // 선택된 도시 객체(city)를 props 로 전달받아 표시만 한다.
 // 이 카드가 현재 선택된 카드인지 여부(isSelected)도 부모의 selectedCityId 로부터 계산되어 넘어온다.
@@ -29,6 +32,17 @@ const STATUS_ICON = {
 
 // 날씨 상태 문구에 어울리는 이모지를 붙인다. 목록에 없는 상태는 기본 구름 아이콘으로 대체.
 const statusIcon = computed(() => STATUS_ICON[props.city.status] ?? '🌤️')
+
+// 화면 표시용 기온 변환. Mock 데이터(city.temp)와 임계값(HOT_THRESHOLD 등)은 항상 섭씨 원본이며,
+// 게이지/배지 판정 기준은 그대로 섭씨를 사용하고, 사용자에게 보여주는 숫자만 단위 설정에 맞춰 변환한다.
+const toDisplayTemp = (celsius) => {
+  if (configStore.unit === 'fahrenheit') {
+    return Math.round((celsius * 9) / 5 + 32)
+  }
+  return celsius
+}
+
+const displayTemp = computed(() => toDisplayTemp(props.city.temp))
 
 // 기온을 막대 길이(%)와 색상으로 표현한다.
 const gaugeStyle = computed(() => {
@@ -77,12 +91,18 @@ onUpdated(() => {
     @click="emit('select-card', city)"
   >
     <h4>{{ city.name }}</h4>
-    <p>현재 기온: {{ city.temp }}°C</p>
+    <p>현재 기온: {{ displayTemp }}{{ configStore.unitSymbol }}</p>
     <p class="status-line">{{ statusIcon }} {{ city.status }}</p>
 
-    <span v-if="city.temp >= HOT_THRESHOLD" class="badge hot">더움 (25도 이상)</span>
-    <span v-else-if="city.temp >= MILD_THRESHOLD" class="badge mild">보통 (20~24도)</span>
-    <span v-else class="badge cool">선선함 (20도 미만)</span>
+    <span v-if="city.temp >= HOT_THRESHOLD" class="badge hot">
+      더움 ({{ toDisplayTemp(HOT_THRESHOLD) }}{{ configStore.unitSymbol }} 이상)
+    </span>
+    <span v-else-if="city.temp >= MILD_THRESHOLD" class="badge mild">
+      보통 ({{ toDisplayTemp(MILD_THRESHOLD) }}~{{ toDisplayTemp(HOT_THRESHOLD - 1) }}{{ configStore.unitSymbol }})
+    </span>
+    <span v-else class="badge cool">
+      선선함 ({{ toDisplayTemp(MILD_THRESHOLD) }}{{ configStore.unitSymbol }} 미만)
+    </span>
 
     <div class="gauge-track">
       <div class="gauge-fill" :style="gaugeStyle"></div>
