@@ -30,17 +30,17 @@ defineProps({
 .range-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .range-row + .range-row {
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .range-label {
-  flex: 0 0 52px;
+  flex: 0 0 58px;
+  color: #475467;
   font-size: 12px;
-  font-weight: 700;
-  color: #495057;
+  font-weight: 750;
 }
 
 .range-bar {
@@ -51,7 +51,7 @@ defineProps({
 }
 
 .arrow {
-  color: #adb5bd;
+  color: #98a2b3;
   font-size: 12px;
   font-weight: 700;
 }
@@ -59,21 +59,42 @@ defineProps({
 .range-track {
   display: flex;
   flex: 1;
-  border: 1px solid #ced4da;
-  border-radius: 999px;
   overflow: hidden;
+  border: 1px solid #d0d5dd;
+  border-radius: 999px;
 }
 
 .range-segment {
   flex: 1;
   padding: 4px 6px;
   text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: #495057;
+  color: #475467;
+  font-size: 10px;
+  font-weight: 700;
   white-space: nowrap;
 }
 .range-segment + .range-segment {
-  border-left: 1px solid #ced4da;
+  border-left: 1px solid #d0d5dd;
+}
+
+@media (max-width: 620px) {
+  .range-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .range-label {
+    flex-basis: auto;
+  }
+
+  .range-bar {
+    width: 100%;
+  }
+
+  .range-segment {
+    padding: 5px 3px;
+    font-size: 9px;
+  }
 }
 </style>

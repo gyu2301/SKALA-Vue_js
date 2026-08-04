@@ -1,35 +1,46 @@
 @import './base.css';
 
+:root {
+  color-scheme: light;
+  --color-background: #f3f7f6;
+  --color-background-soft: #f8faf9;
+  --color-heading: #182230;
+  --color-text: #344054;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: #f3f7f6;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  color: #344054;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(66, 184, 131, 0.14), transparent 30%),
+    radial-gradient(circle at 94% 18%, rgba(32, 164, 167, 0.1), transparent 24%),
+    #f3f7f6;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
-}
-
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+  width: 100%;
+  min-height: 100vh;
 }

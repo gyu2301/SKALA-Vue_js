@@ -20,16 +20,25 @@ defineProps({
 
 <style scoped>
 .dashboard-card {
-  background: #f8f9fa;
-  padding: 18px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border: 1px solid #e9ecef;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.045);
 }
 .dashboard-card h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 12px;
+  padding-bottom: 11px;
+  margin: 0 0 15px;
+  border-bottom: 2px solid #eef2f1;
+  color: #344054;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+@media (max-width: 680px) {
+  .dashboard-card {
+    padding: 16px;
+  }
 }
 </style>

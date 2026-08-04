@@ -13,18 +13,24 @@ const configStore = useConfigStore()
 
 <style scoped>
 .unit-toggle {
-  padding: 7px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  background: #ffffff;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  color: #495057;
+  min-width: 54px;
+  padding: 7px 10px;
+  border: 1px solid #bde2d4;
+  border-radius: 9px;
+  background: #effaf6;
+  color: #087a55;
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 .unit-toggle:hover {
-  background: #f1f3f5;
+  border-color: #42b883;
+  background: #e2f7ef;
+  transform: translateY(-1px);
 }
 </style>

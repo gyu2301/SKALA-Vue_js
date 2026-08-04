@@ -67,8 +67,17 @@ const windSegments = [
   { icon: '🌬️', text: `강풍 (${WIND_STRONG}m/s↑)`, color: 'rgba(52, 73, 94, 0.22)' },
 ]
 
-const { searchQuery, filteredWeatherList, isLoading, errorMessage, isSearching, searchErrorMessage, searchCity } =
-  useWeatherSearch()
+const {
+  searchQuery,
+  filteredWeatherList,
+  isLoading,
+  errorMessage,
+  isSearching,
+  searchErrorMessage,
+  searchResults,
+  searchCity,
+  addCityToDashboard,
+} = useWeatherSearch()
 
 const selectedCityId = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.')
@@ -88,17 +97,23 @@ const showDetail = (city) => {
   router.push(`/weather/${city.id}`)
 }
 
-// 이미 불러온 도시 중에 일치하는 곳이 있으면 그중 첫 번째를 선택하고,
-// 없으면 OpenWeatherMap 에서 해당 이름(부분 입력 포함)의 도시를 검색해 목록에 추가한 뒤
-// 그중 첫 번째를 선택한다. searchCity는 최대 5개까지 배열로 결과를 돌려준다.
+// 이미 대시보드에 있는 도시 중에 일치하는 곳이 있으면 그중 첫 번째를 바로 선택하고,
+// 없으면 OpenWeatherMap 에서 해당 이름(부분 입력 포함)의 도시를 검색한다. 검색 결과는
+// 대시보드에 바로 추가되지 않고 "검색 결과" 미리보기 목록(searchResults)에 담기며,
+// 사용자가 카드의 "추가하기"를 눌러야 비로소 대시보드로 옮겨진다.
 const selectFirstMatch = async () => {
   if (filteredWeatherList.value.length > 0) {
     selectCity(filteredWeatherList.value[0])
     return
   }
 
-  const found = await searchCity(searchQuery.value)
-  if (found.length > 0) selectCity(found[0])
+  await searchCity(searchQuery.value)
+}
+
+// 검색 미리보기 카드의 "추가하기": 대시보드에 추가하고 곧바로 선택 상태로 만든다.
+const addAndSelect = (city) => {
+  addCityToDashboard(city)
+  selectCity(city)
 }
 </script>
 
@@ -106,6 +121,18 @@ const selectFirstMatch = async () => {
   <div class="dashboard-wrapper">
     <BaseDashboardCard title="도시 검색">
       <SearchBar v-model.trim.lazy="searchQuery" @select-first="selectFirstMatch" />
+    </BaseDashboardCard>
+
+    <BaseDashboardCard v-if="searchResults.length > 0" title="검색 결과">
+      <ul class="search-result-list">
+        <li v-for="city in searchResults" :key="city.id" class="search-result-item">
+          <div class="search-result-info">
+            <strong>{{ city.name }}</strong>
+            <span>{{ city.address }}</span>
+          </div>
+          <button class="btn-add" @click="addAndSelect(city)">+ 대시보드에 추가</button>
+        </li>
+      </ul>
     </BaseDashboardCard>
 
     <BaseDashboardCard title="지역별 날씨 현황">
@@ -158,61 +185,122 @@ const selectFirstMatch = async () => {
 
 .weather-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 15px;
+}
+
+.search-result-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e4e7ec;
+  border-radius: 11px;
+  background: #f9fafb;
+}
+
+.search-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.search-result-info strong {
+  color: #273849;
+  font-size: 14px;
+  font-weight: 800;
+}
+.search-result-info span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.btn-add {
+  padding: 8px 12px;
+  border: 1px solid #42b883;
+  border-radius: 8px;
+  background: #effaf6;
+  color: #087a55;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+.btn-add:hover {
+  background: #d6f2e6;
+  transform: translateY(-1px);
 }
 
 .card-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 12px;
+  padding-bottom: 11px;
+  margin: 0 0 15px;
+  border-bottom: 2px solid #eef2f1;
+  color: #344054;
+  font-size: 16px;
+  font-weight: 750;
 }
 .result-count {
-  font-weight: 400;
-  color: #868e96;
+  color: #087a55;
   font-size: 0.85em;
+  font-weight: 700;
 }
 
 .legend {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  background: #ffffff;
-  border: 1px dashed #ced4da;
-  border-radius: 6px;
+  padding: 13px 14px;
+  margin: 0 0 16px;
+  border: 1px solid #d6eee5;
+  border-radius: 11px;
+  background: linear-gradient(120deg, #fbfefd, #f3faf7);
 }
 
 .empty-message {
   margin: 8px 0 0;
-  padding: 12px 0;
+  padding: 16px;
+  border: 1px solid #fedf89;
+  border-radius: 10px;
+  background: #fffaeb;
   text-align: center;
-  color: #e74c3c;
-  font-size: 14px;
+  color: #93370d;
+  font-size: 13px;
 }
 
 .loading-message {
   margin: 8px 0 0;
   padding: 20px 0;
   text-align: center;
-  color: #868e96;
-  font-size: 14px;
+  color: #667085;
+  font-size: 13px;
 }
 
 .api-error {
   margin: 8px 0 0;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: #fff1f3;
-  color: #c01048;
+  padding: 12px 14px;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  background: #fef3f2;
+  color: #b42318;
   font-size: 13px;
 }
 
 .status-bar {
-  background: #e8f5e9;
-  padding: 10px;
+  padding: 12px 14px;
+  border: 1px solid #bde2d4;
+  border-radius: 11px;
+  background: #effaf6;
   text-align: center;
-  color: #2e7d32;
-  font-weight: bold;
-  border-radius: 6px;
+  color: #087a55;
+  font-size: 13px;
+  font-weight: 750;
 }
 </style>

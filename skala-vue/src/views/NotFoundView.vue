@@ -13,36 +13,40 @@
 
 <style scoped>
 .not-found-wrapper {
+  padding: 58px 20px;
+  border: 1px solid #d6eee5;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #ffffff, #f1faf7);
   text-align: center;
-  padding: 60px 20px;
 }
 .icon {
-  font-size: 3rem;
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  font-size: 3rem;
 }
 .not-found-wrapper h3 {
-  font-size: 1.2rem;
-  color: #2c3e50;
   margin: 0 0 8px;
+  color: #273849;
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 .not-found-wrapper p {
-  color: #868e96;
-  font-size: 14px;
   margin: 0 0 20px;
+  color: #667085;
+  font-size: 13px;
 }
 
 .btn-primary {
   display: inline-block;
-  padding: 10px 20px;
-  background: #3498db;
+  padding: 10px 18px;
+  border-radius: 9px;
+  background: #087a55;
   color: #fff;
-  border-radius: 4px;
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
 }
 .btn-primary:hover {
-  background: #2980b9;
+  background: #075d42;
 }
 </style>

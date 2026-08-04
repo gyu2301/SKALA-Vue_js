@@ -20,22 +20,26 @@ const counter = useCounterStore()
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+  padding: 16px;
+  border: 1px solid #d6eee5;
+  border-radius: 11px;
+  background: #f5fbf9;
 }
 .store-counter p {
   margin: 0;
-  color: #2c3e50;
+  color: #344054;
 }
 .store-counter button {
   padding: 8px 14px;
-  background: #3498db;
-  color: #fff;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 8px;
+  background: #087a55;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
 }
 .store-counter button:hover {
-  background: #2980b9;
+  background: #075d42;
 }
 </style>

@@ -77,6 +77,9 @@ export const useWeatherStore = defineStore('weather', () => {
   const hasFetched = ref(false)
   const isSearching = ref(false)
   const searchErrorMessage = ref('')
+  // 검색으로 찾은 도시(들)를 담아두는 미리보기 목록. weatherList(대시보드 카드)와 분리해서,
+  // 사용자가 "추가하기"를 눌러야만 weatherList로 옮겨지도록 한다.
+  const searchResults = ref([])
 
   async function fetchWeatherList() {
     if (!API_KEY) {
@@ -175,10 +178,14 @@ export const useWeatherStore = defineStore('weather', () => {
   async function performSearch(trimmed) {
     isSearching.value = true
     searchErrorMessage.value = ''
+    searchResults.value = []
 
     try {
       const prefixResults = await searchByPrefix(trimmed)
-      if (prefixResults.length > 0) return prefixResults
+      if (prefixResults.length > 0) {
+        searchResults.value = prefixResults
+        return prefixResults
+      }
 
       const exactResult = await searchByGeocoding(trimmed)
       if (!exactResult) {
@@ -186,6 +193,7 @@ export const useWeatherStore = defineStore('weather', () => {
         return []
       }
 
+      searchResults.value = [exactResult]
       return [exactResult]
     } catch {
       searchErrorMessage.value = '도시 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
@@ -195,45 +203,45 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
-  // CITY_DIRECTORY 안에서 부분 일치하는 도시를 찾는다. 이미 weatherList 에 있는(=이미
-  // 조회해본) 도시는 다시 API를 부르지 않고 그대로 재사용해서 불필요한 호출을 줄인다.
+  // CITY_DIRECTORY 안에서 부분 일치하는 도시를 찾는다. 이미 weatherList 에 있는(=이미 대시보드에
+  // 추가된) 도시는 다시 API를 부르지 않고 그대로 재사용해서 불필요한 호출을 줄인다. 아직 대시보드에
+  // 없는 도시는 새로 fetch 하되, weatherList에는 넣지 않고 결과로만 반환한다("추가하기" 클릭 전까지는
+  // 대시보드에 반영되지 않아야 하므로).
   async function searchByPrefix(trimmed) {
     const matches = CITY_DIRECTORY.filter((city) => city.name.includes(trimmed)).slice(0, MAX_SEARCH_RESULTS)
     if (matches.length === 0) return []
 
-    const toFetch = matches.filter((city) => !weatherList.value.some((existing) => existing.id === city.id))
+    const alreadyAdded = new Map(weatherList.value.map((city) => [city.id, city]))
+    const toFetch = matches.filter((city) => !alreadyAdded.has(city.id))
 
-    if (toFetch.length > 0) {
-      const responses = await Promise.all(
-        toFetch.map((city) =>
-          axios.get(WEATHER_API_URL, {
-            params: { lat: city.lat, lon: city.lon, appid: API_KEY, units: 'metric', lang: 'kr' },
-          }),
-        ),
-      )
+    const fetchedCities =
+      toFetch.length > 0
+        ? await Promise.all(
+            toFetch.map(async (city) => {
+              const response = await axios.get(WEATHER_API_URL, {
+                params: { lat: city.lat, lon: city.lon, appid: API_KEY, units: 'metric', lang: 'kr' },
+              })
+              const data = response.data
 
-      const fetchedCities = responses.map((response, index) => {
-        const city = toFetch[index]
-        const data = response.data
+              return {
+                id: city.id,
+                name: city.name,
+                address: city.address,
+                temp: Math.round(data.main.temp),
+                status: mapStatus(data),
+                humidity: data.main.humidity,
+                wind: data.wind.speed,
+              }
+            }),
+          )
+        : []
 
-        return {
-          id: city.id,
-          name: city.name,
-          address: city.address,
-          temp: Math.round(data.main.temp),
-          status: mapStatus(data),
-          humidity: data.main.humidity,
-          wind: data.wind.speed,
-        }
-      })
-
-      weatherList.value = [...weatherList.value, ...fetchedCities]
-    }
-
-    return weatherList.value.filter((city) => matches.some((match) => match.id === city.id))
+    const fetchedById = new Map(fetchedCities.map((city) => [city.id, city]))
+    return matches.map((city) => alreadyAdded.get(city.id) ?? fetchedById.get(city.id))
   }
 
   // CITY_DIRECTORY 에 없는 임의 도시를 Geocoding API로 찾는다(정확한 이름 필요).
+  // "추가하기" 클릭 전까지는 weatherList(대시보드)에 반영하지 않고 결과만 돌려준다.
   async function searchByGeocoding(trimmed) {
     const geoResponse = await axios.get(GEO_API_URL, {
       params: { q: trimmed, limit: 1, appid: API_KEY },
@@ -246,7 +254,7 @@ export const useWeatherStore = defineStore('weather', () => {
     const displayName = place.local_names?.ko ?? place.name
 
     // 좌표(id)뿐 아니라 이름으로도 중복을 확인한다. 기본/디렉터리 도시를 다시 검색하면
-    // 좌표 기반 id는 서로 다르게 계산되므로, 이름이 같으면 기존 카드를 재사용한다.
+    // 좌표 기반 id는 서로 다르게 계산되므로, 이름이 같으면 이미 대시보드에 있는 카드를 재사용한다.
     const normalize = (name) => name.replace(/\s+/g, '')
     const existing = weatherList.value.find(
       (city) => city.id === id || normalize(city.name) === normalize(displayName),
@@ -259,7 +267,7 @@ export const useWeatherStore = defineStore('weather', () => {
 
     const data = weatherResponse.data
 
-    const city = {
+    return {
       id,
       name: displayName,
       address: place.country === 'KR' ? `대한민국 ${displayName}` : `${place.name}, ${place.country}`,
@@ -268,9 +276,15 @@ export const useWeatherStore = defineStore('weather', () => {
       humidity: data.main.humidity,
       wind: data.wind.speed,
     }
+  }
 
-    weatherList.value = [...weatherList.value, city]
-    return city
+  // "추가하기" 클릭 시 검색 미리보기(searchResults)의 도시를 대시보드(weatherList)로 옮긴다.
+  function addCityToDashboard(city) {
+    const alreadyAdded = weatherList.value.some((existing) => existing.id === city.id)
+    if (!alreadyAdded) {
+      weatherList.value = [...weatherList.value, city]
+    }
+    searchResults.value = searchResults.value.filter((result) => result.id !== city.id)
   }
 
   return {
@@ -280,7 +294,9 @@ export const useWeatherStore = defineStore('weather', () => {
     hasFetched,
     isSearching,
     searchErrorMessage,
+    searchResults,
     fetchWeatherList,
     searchCity,
+    addCityToDashboard,
   }
 })

@@ -126,97 +126,136 @@ onUpdated(() => {
 
 <style scoped>
 .weather-card {
-  background: #fff;
-  border: 1px solid #dee2e6;
-  padding: 12px;
-  padding-right: 76px;
-  border-radius: 6px;
-  cursor: pointer;
   position: relative;
+  min-height: 210px;
+  padding: 17px;
+  padding-right: 92px;
+  border: 1px solid #e4e7ec;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ffffff, #fbfdfc);
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(16, 24, 40, 0.035);
   transition:
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 .weather-card:hover {
-  border-color: #ced4da;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-color: #b8d9cd;
+  box-shadow: 0 12px 24px rgba(39, 56, 73, 0.09);
+  transform: translateY(-2px);
 }
 /* 선택된 카드 강조 (:class 객체 바인딩으로 붙는다) */
 .weather-card.is-selected {
-  border-color: #2e7d32;
-  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.15);
+  border-color: #42b883;
+  background: linear-gradient(145deg, #ffffff, #effaf6);
+  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.12);
+}
+
+.weather-card h4 {
+  margin: 0 0 3px;
+  color: #273849;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.weather-card > p:not(.status-line) {
+  margin: 0;
+  color: #475467;
+  font-size: 13px;
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 4px;
-  color: #fff;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 700;
 }
 .hot {
-  background-color: #ff7675;
+  background-color: #ffe4e2;
+  color: #b42318;
 }
 .mild {
-  background-color: #fdcb6e;
+  background-color: #fef0c7;
+  color: #93370d;
 }
 .cool {
-  background-color: #74b9ff;
+  background-color: #e0f2fe;
+  color: #026aa2;
 }
 
 .status-line {
-  margin: 2px 0 10px;
-  font-size: 13px;
-  color: #6c757d;
+  margin: 3px 0 12px;
+  color: #667085;
+  font-size: 12px;
 }
 
 .gauge-track {
-  height: 6px;
-  margin-top: 10px;
-  background: #eef1f4;
-  border-radius: 3px;
+  height: 7px;
+  margin-top: 13px;
   overflow: hidden;
+  border-radius: 999px;
+  background: #eef1f4;
 }
 .gauge-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 999px;
   transition:
     width 0.3s ease,
     background-color 0.3s ease;
 }
 
 .stats-row {
+  flex-wrap: wrap;
   display: flex;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 .stat-chip {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 3px 9px;
-  background: #eef6ff;
+  padding: 4px 9px;
+  background: #f2f4f7;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #4a5568;
+  color: #475467;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .btn-detail {
   position: absolute;
-  right: 12px;
-  top: 13px;
-  padding: 5px 10px;
-  font-size: 12px;
-  background: #fff;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  color: #495057;
+  top: 15px;
+  right: 15px;
+  padding: 6px 10px;
+  border: 1px solid #c9ded7;
+  border-radius: 8px;
+  background: #f5fbf9;
+  color: #24644f;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 .btn-detail:hover {
-  background: #f1f3f5;
+  border-color: #42b883;
+  background: #effaf6;
+}
+
+@media (max-width: 440px) {
+  .weather-card {
+    padding-right: 17px;
+  }
+
+  .btn-detail {
+    position: static;
+    width: 100%;
+    margin-top: 13px;
+  }
 }
 </style>

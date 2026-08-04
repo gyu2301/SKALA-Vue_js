@@ -74,39 +74,72 @@ const handleReset = () => {
 <style scoped>
 .search-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 9px;
 }
 input {
-  padding: 8px 10px;
-  width: auto;
   flex: 1;
+  width: auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: none;
+  background: #fdfefe;
   font-size: 14px;
-  color: #2c3e50;
-  background: #ffffff;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  color: #344054;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 input:focus {
-  outline: none;
-  border-color: #3498db;
+  border-color: var(--vue-green);
+  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.13);
+}
+input::placeholder {
+  color: #98a2b3;
 }
 
 .btn-ghost {
-  padding: 7px 12px;
-  font-size: 13px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
   background: #ffffff;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  color: #475467;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
 }
 .btn-ghost:hover:not(:disabled) {
-  background: #f1f3f5;
+  border-color: #98a2b3;
+  background: #f9fafb;
 }
 .btn-ghost:disabled {
-  opacity: 0.4;
+  border-color: #eaecf0;
+  background: #f2f4f7;
+  color: #98a2b3;
   cursor: not-allowed;
+}
+
+p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+p strong {
+  color: #087a55;
+  font-weight: 750;
+}
+
+@media (max-width: 560px) {
+  .search-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 </style>

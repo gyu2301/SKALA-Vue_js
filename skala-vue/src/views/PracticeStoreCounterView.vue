@@ -20,30 +20,33 @@ import StoreCounter from '@/components/practices/library/StoreCounter.vue'
 }
 
 .dashboard-card {
-  background: #f8f9fa;
-  padding: 18px;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  padding: 21px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.045);
 }
 .dashboard-card h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2c3e50;
+  padding-bottom: 12px;
   margin: 0 0 16px;
+  border-bottom: 2px solid #eef2f1;
+  color: #344054;
+  font-size: 16px;
+  font-weight: 750;
 }
 
 .btn-back {
   display: inline-block;
   margin-top: 20px;
-  padding: 8px 14px;
-  background: #2c3e50;
+  padding: 9px 14px;
+  border-radius: 9px;
+  background: #087a55;
   color: #fff;
-  border-radius: 4px;
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
 }
 .btn-back:hover {
-  background: #1a252f;
+  background: #075d42;
 }
 </style>
