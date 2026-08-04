@@ -67,7 +67,7 @@ const windSegments = [
   { icon: '🌬️', text: `강풍 (${WIND_STRONG}m/s↑)`, color: 'rgba(52, 73, 94, 0.22)' },
 ]
 
-const { searchQuery, filteredWeatherList } = useWeatherSearch()
+const { searchQuery, filteredWeatherList, isLoading, errorMessage } = useWeatherSearch()
 
 const selectedCityId = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.')
@@ -109,7 +109,10 @@ const selectFirstMatch = () => {
         <ThresholdRangeBar label="🌬️ 바람" :segments="windSegments" />
       </div>
 
-      <div class="weather-grid" @click.self="clearSelection">
+      <p v-if="isLoading" class="loading-message">OpenWeatherMap에서 날씨 정보를 불러오는 중입니다...</p>
+      <p v-else-if="errorMessage" class="api-error" role="alert">{{ errorMessage }}</p>
+
+      <div v-else class="weather-grid" @click.self="clearSelection">
         <WeatherCard
           v-for="city in filteredWeatherList"
           :key="city.id"
@@ -121,7 +124,7 @@ const selectFirstMatch = () => {
       </div>
 
       <template #footer>
-        <p v-if="filteredWeatherList.length === 0" class="empty-message">
+        <p v-if="!isLoading && !errorMessage && filteredWeatherList.length === 0" class="empty-message">
           '{{ searchQuery }}'와 일치하는 도시가 없습니다. 다른 이름으로 검색해 보세요.
         </p>
       </template>
@@ -169,6 +172,23 @@ const selectFirstMatch = () => {
   text-align: center;
   color: #e74c3c;
   font-size: 14px;
+}
+
+.loading-message {
+  margin: 8px 0 0;
+  padding: 20px 0;
+  text-align: center;
+  color: #868e96;
+  font-size: 14px;
+}
+
+.api-error {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff1f3;
+  color: #c01048;
+  font-size: 13px;
 }
 
 .status-bar {

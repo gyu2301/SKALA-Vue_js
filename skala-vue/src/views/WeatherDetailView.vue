@@ -1,23 +1,20 @@
 <script setup>
 /**
  * 지역별 상세 기상 관측 정보 ( /weather/:cityId )
- * 동적 경로 매칭으로 전달된 cityId 를 기반으로 Mount 시점에 Mock 데이터에서
- * 해당 도시 객체를 선택해 보여준다.
+ * 동적 경로 매칭으로 전달된 cityId 를 기반으로 weatherStore(OpenWeatherMap 연동) 목록에서
+ * 해당 도시 객체를 찾아 보여준다. weatherList 가 API 응답 도착 후에 채워지는 비동기
+ * 데이터이므로, onMounted 시점의 1회성 조회 대신 computed 로 만들어 데이터 도착 시 자동 반영한다.
  */
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWeatherSearch } from '@/composables/useWeatherSearch'
 import { useConfigStore } from '@/stores/configStore'
 
 const route = useRoute()
-const { weatherList } = useWeatherSearch()
+const { weatherList, isLoading, errorMessage } = useWeatherSearch()
 const configStore = useConfigStore()
 
-const city = ref(null)
-
-onMounted(() => {
-  city.value = weatherList.value.find((item) => item.id === route.params.cityId) ?? null
-})
+const city = computed(() => weatherList.value.find((item) => item.id === route.params.cityId) ?? null)
 
 // 화면 표시용 기온. Mock 데이터(city.temp)는 항상 섭씨 원본이며, 단위 설정에 맞춰 변환해 보여준다.
 const displayTemp = computed(() => {
@@ -34,7 +31,10 @@ const displayTemp = computed(() => {
     <div class="dashboard-card">
       <h3>🌡️ 지역별 상세 기상 관측 정보</h3>
 
-      <div v-if="city" class="detail-body">
+      <p v-if="isLoading" class="loading-message">OpenWeatherMap에서 날씨 정보를 불러오는 중입니다...</p>
+      <p v-else-if="errorMessage" class="api-error" role="alert">{{ errorMessage }}</p>
+
+      <div v-else-if="city" class="detail-body">
         <p>
           📍 지정 지역: <strong>{{ city.address }}</strong>
         </p>
@@ -89,6 +89,23 @@ const displayTemp = computed(() => {
   text-align: center;
   color: #e74c3c;
   font-size: 14px;
+}
+
+.loading-message {
+  margin: 8px 0 16px;
+  padding: 20px 0;
+  text-align: center;
+  color: #868e96;
+  font-size: 14px;
+}
+
+.api-error {
+  margin: 8px 0 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff1f3;
+  color: #c01048;
+  font-size: 13px;
 }
 
 .btn-back {
