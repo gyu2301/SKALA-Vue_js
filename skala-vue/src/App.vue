@@ -18,6 +18,7 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
           <span>🌍 실시간 지구본</span>
           <span>📊 24시간 예보</span>
           <span>🧥 옷차림 추천</span>
+          <span>🚀 Vercel로 배포완료</span>
         </div>
 
         <a class="sibling-link" href="https://skala-vue-jscode-challenge.vercel.app" target="_blank" rel="noopener noreferrer">
@@ -38,8 +39,8 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
         </div>
 
         <div class="overview-copy">
-          <strong>날씨를 이해하는 새로운 방법</strong>
-          <span>보는 예보에서 행동을 알려주는 예보로.</span>
+          <strong>오늘 날씨, 한눈에</strong>
+          <span>우산 챙기기 전에 다시 확인해요 ☁️</span>
         </div>
       </div>
     </header>

@@ -31,3 +31,11 @@ npm run dev
 ```
 
 지구본은 외부 실시간 데이터를 사용하므로 인터넷 연결이 필요합니다.
+
+## 배포
+
+[실습 10 - Vite 빌드 및 실무 배포] 과제 항목 점검 결과:
+
+- **ESLint**: `npm run lint` 통과 (에러 없음)
+- **API 키 환경 변수화**: `VITE_OPENWEATHER_API_KEY`를 `.env`로 분리, `.gitignore`에 등록되어 있어 Git에 커밋된 적 없음
+- **정적 파일 호스팅**: GitHub Pages 대신 [Vercel](https://skala-vue-jsweather-viewer.vercel.app)로 이미 배포 완료. `npm run build` 산출물(`dist/`)을 그대로 정적 호스팅하므로 Node.js 서버 없이 서비스된다는 요구사항은 동일하게 충족되어 별도로 GitHub Pages에 재배포하지 않았습니다.

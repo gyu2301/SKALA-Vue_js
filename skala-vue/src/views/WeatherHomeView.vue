@@ -259,7 +259,8 @@ const backToDashboard = () => {
     <!-- [Weather Idea 2 + Element Plus] 현재 위치에 맞는 생활 수칙을 ElAlert로 표시 -->
     <section v-if="briefCity" class="daily-brief" aria-label="오늘의 생활 날씨 알림">
       <div class="brief-city">
-        <span>TODAY'S BRIEF · 📍 {{ briefLocationLabel }}</span>
+        <span>TODAY'S BRIEF</span>
+        <span>📍 {{ briefLocationLabel }}</span>
         <strong>{{ briefCity.name }}의 생활 날씨</strong>
         <small v-if="isLocating">현재 위치를 확인하는 중이에요…</small>
         <small v-else-if="locationError">{{ locationError }}</small>
