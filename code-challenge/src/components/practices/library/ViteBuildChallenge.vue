@@ -64,6 +64,12 @@ const regionGreeting = `웰컴 투 ${myRegion}`</pre>
         <code>npm run build:staging</code>(= <code>vite build --mode staging</code>) 실행 시 터미널에 <code>building client environment for staging...</code>
         문구가 출력되어, Vite가 <code>.env.staging</code> 파일을 로드했음을 확인할 수 있었다.
       </p>
+      <p class="mission-desc">
+        <code>.env.staging</code> / <code>.env.production</code>은 <code>.gitignore</code>에 걸려 GitHub·Vercel에는 올라가지 않는다. 로컬 빌드에서는
+        위처럼 파일 값이 바로 반영되지만, <strong>배포된 Vercel 사이트</strong>에서 실제 값을 보려면 Vercel 프로젝트의
+        <strong>Settings → Environment Variables</strong>에 <code>VITE_API_URL</code>을 환경별로 등록하고 재배포해야 한다 — 이것이 배포 환경에서
+        env 값을 다루는 실무 방식이다.
+      </p>
     </div>
 
     <div class="card">
