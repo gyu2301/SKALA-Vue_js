@@ -67,8 +67,7 @@ const regionGreeting = `웰컴 투 ${myRegion}`</pre>
       <p class="mission-desc">
         <code>.env.staging</code> / <code>.env.production</code>은 <code>.gitignore</code>에 걸려 GitHub·Vercel에는 올라가지 않는다. 로컬 빌드에서는
         위처럼 파일 값이 바로 반영되지만, <strong>배포된 Vercel 사이트</strong>에서 실제 값을 보려면 Vercel 프로젝트의
-        <strong>Settings → Environment Variables</strong>에 <code>VITE_API_URL</code>을 환경별로 등록하고 재배포해야 한다 — 이것이 배포 환경에서
-        env 값을 다루는 실무 방식이다.
+        <strong>Settings → Environment Variables</strong>에 <code>VITE_API_URL</code>을 환경별로 등록하고 재배포해야 한다.
       </p>
     </div>
 

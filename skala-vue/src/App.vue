@@ -21,6 +21,8 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
           <span>🚀 Vercel로 배포완료</span>
         </div>
 
+        <!-- [과제 확장 - 사이트 연결] 별도 배포된 code-challenge 프로젝트로 이동하는 링크.
+             code-challenge/src/App.vue에도 반대 방향 링크가 있다. -->
         <a class="sibling-link" href="https://skala-vue-jscode-challenge.vercel.app" target="_blank" rel="noopener noreferrer">
           🧪 Vue Code Challenge 사이트 보러가기 <span aria-hidden="true">↗</span>
         </a>

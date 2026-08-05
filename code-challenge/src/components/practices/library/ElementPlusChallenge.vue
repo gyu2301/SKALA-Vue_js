@@ -1,6 +1,9 @@
 <script setup>
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useProducts } from '@/composables/useProducts.js'
+import { useCartStore } from '@/stores/cart.js'
+import { useLearningStore } from '@/stores/learning.js'
 
 // 실습 1. 회원가입 Form & Input 제어
 const userForm = ref({
@@ -71,6 +74,49 @@ onUnmounted(() => {
     clearInterval(downloadTimer)
   }
 })
+
+// [과제 확장 - 이커머스] 실습 4. 이커머스 상품 카탈로그 & 장바구니
+// 상품 데이터는 11번 Axios API 챌린지와 동일한 useProducts composable을 재사용하고,
+// 장바구니 상태는 10번 Pinia 챌린지의 useCartStore를 그대로 공유한다 (전역 상태 → 두 화면이 실시간으로 동기화됨).
+const { products, isLoading: productsLoading, fetchProducts } = useProducts()
+const cartStore = useCartStore()
+const dashboardStore = useLearningStore()
+const cartDrawerVisible = ref(false)
+
+// [과제 확장 - 이커머스] 10번 Pinia 챌린지로 바로 이동해 같은 장바구니 상태를 확인시켜주는 버튼용 핸들러
+const goToCartStoreChallenge = () => {
+  dashboardStore.selectChallenge(10)
+}
+
+onMounted(() => fetchProducts(6))
+
+const discountedPrice = (product) => (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
+
+const addToCart = (product) => {
+  cartStore.addItem(product)
+  ElMessage.success(`🛍️ ${product.title}을(를) 장바구니에 담았습니다.`)
+}
+
+const handleQtyChange = (id, qty) => {
+  cartStore.updateQty(id, qty)
+}
+
+const handleRemoveItem = (id) => {
+  cartStore.removeItem(id)
+  ElMessage.info('장바구니에서 상품을 제거했습니다.')
+}
+
+const handleCheckout = () => {
+  ElMessageBox.confirm(`총 ${cartStore.totalCount}개 상품, $${cartStore.totalPrice.toFixed(2)}를 결제하시겠습니까?`, '🧾 주문 확인', {
+    confirmButtonText: '결제하기',
+    cancelButtonText: '취소',
+    type: 'info',
+  }).then(() => {
+    ElMessage.success('🎉 결제가 완료되었습니다! (데모용 – 실제 결제는 이루어지지 않습니다)')
+    cartStore.clearCart()
+    cartDrawerVisible.value = false
+  })
+}
 </script>
 
 <template>
@@ -169,6 +215,73 @@ onUnmounted(() => {
           </div>
         </div>
       </el-card>
+
+      <el-card class="challenge-card ecommerce-card" shadow="hover">
+        <template #header>
+          <div class="ecommerce-card-header">
+            <div class="element-card-header">
+              <span class="header-icon teal">🛍</span>
+              <div>
+                <strong>실습 4. 이커머스 상품 카탈로그 & 장바구니</strong>
+                <small>Image · Tag · Badge · Drawer · Popconfirm (Axios 챌린지와 상품 데이터 공유)</small>
+              </div>
+            </div>
+            <div class="ecommerce-header-actions">
+              <!-- [과제 확장 - 이커머스] 이 장바구니는 10번 Pinia 챌린지와 같은 useCartStore를 쓴다는 것을 보여주는 이동 버튼 -->
+              <button type="button" class="cross-link-button" @click="goToCartStoreChallenge">🍍 Pinia 스토어에서 실시간으로 보기 →</button>
+              <el-badge :value="cartStore.totalCount" :hidden="cartStore.isEmpty">
+                <el-button circle size="small" @click="cartDrawerVisible = true">🛒</el-button>
+              </el-badge>
+            </div>
+          </div>
+        </template>
+
+        <div v-if="productsLoading && products.length === 0" class="ecommerce-loading">상품을 불러오는 중입니다...</div>
+
+        <div v-else class="product-grid">
+          <div v-for="product in products" :key="product.id" class="product-card">
+            <el-image :src="product.thumbnail" :alt="product.title" fit="cover" class="product-image" loading="lazy" />
+            <el-tag v-if="product.discountPercentage > 10" type="danger" size="small" class="discount-tag">-{{ Math.round(product.discountPercentage) }}%</el-tag>
+            <strong class="product-title">{{ product.title }}</strong>
+            <div class="product-price-row">
+              <span class="product-price">${{ discountedPrice(product) }}</span>
+              <span v-if="product.discountPercentage > 10" class="product-price-original">${{ product.price }}</span>
+            </div>
+            <el-button type="warning" size="small" @click="addToCart(product)">🛒 담기</el-button>
+          </div>
+        </div>
+
+        <el-drawer v-model="cartDrawerVisible" title="🛒 장바구니" size="360px">
+          <el-empty v-if="cartStore.isEmpty" description="장바구니가 비어있습니다" />
+
+          <div v-else class="cart-items">
+            <div v-for="item in cartStore.items" :key="item.id" class="cart-item">
+              <img :src="item.thumbnail" :alt="item.title" />
+              <div class="cart-item-info">
+                <strong>{{ item.title }}</strong>
+                <span>${{ item.price }} × {{ item.qty }}</span>
+              </div>
+              <el-input-number :model-value="item.qty" :min="1" :max="99" size="small" @change="(val) => handleQtyChange(item.id, val)" />
+              <el-popconfirm title="이 상품을 삭제할까요?" confirm-button-text="삭제" cancel-button-text="취소" @confirm="handleRemoveItem(item.id)">
+                <template #reference>
+                  <el-button circle size="small" text>✕</el-button>
+                </template>
+              </el-popconfirm>
+            </div>
+          </div>
+
+          <template #footer>
+            <div class="cart-footer">
+              <div class="cart-total">
+                <span>총 합계</span>
+                <strong>${{ cartStore.totalPrice.toFixed(2) }}</strong>
+              </div>
+              <el-button :disabled="cartStore.isEmpty" @click="cartStore.clearCart">비우기</el-button>
+              <el-button type="success" :disabled="cartStore.isEmpty" @click="handleCheckout">결제하기</el-button>
+            </div>
+          </template>
+        </el-drawer>
+      </el-card>
     </div>
   </div>
 </template>
@@ -220,7 +333,8 @@ onUnmounted(() => {
   border-radius: 14px;
 }
 
-.feedback-card {
+.feedback-card,
+.ecommerce-card {
   grid-column: 1 / -1;
 }
 
@@ -275,6 +389,11 @@ onUnmounted(() => {
 .header-icon.purple {
   background: #f4f0ff;
   color: #6941c6;
+}
+
+.header-icon.teal {
+  background: #e6fbfa;
+  color: #0e7c86;
 }
 
 .register-form {
@@ -388,12 +507,165 @@ onUnmounted(() => {
   font-size: 10px;
 }
 
+.ecommerce-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.ecommerce-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.cross-link-button {
+  padding: 7px 12px;
+  border: 1px solid #dfd5ff;
+  border-radius: 999px;
+  background: #f4f0ff;
+  color: #6941c6;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cross-link-button:hover {
+  background: #ebe4ff;
+}
+
+.ecommerce-loading {
+  padding: 30px;
+  color: #667085;
+  text-align: center;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.product-card {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+  background: white;
+}
+
+.product-card :deep(.product-image) {
+  width: 100%;
+  height: 110px;
+  border-radius: 8px;
+}
+
+.discount-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.product-title {
+  overflow: hidden;
+  color: #344054;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.product-price {
+  color: #087a55;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.product-price-original {
+  color: #98a2b3;
+  font-size: 11px;
+  text-decoration: line-through;
+}
+
+.cart-items {
+  display: grid;
+  gap: 14px;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 48px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.cart-item img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cart-item-info {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.cart-item-info strong {
+  overflow: hidden;
+  color: #344054;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-item-info span {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.cart-item :deep(.el-input-number) {
+  width: 110px;
+}
+
+.cart-footer {
+  display: grid;
+  gap: 10px;
+}
+
+.cart-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #475467;
+  font-size: 13px;
+}
+
+.cart-total strong {
+  color: #087a55;
+  font-size: 16px;
+}
+
 @media (max-width: 900px) {
   .ui-library-grid {
     grid-template-columns: 1fr;
   }
 
-  .feedback-card {
+  .feedback-card,
+  .ecommerce-card {
     grid-column: auto;
   }
 
@@ -413,6 +685,10 @@ onUnmounted(() => {
 @media (max-width: 600px) {
   .library-heading {
     flex-direction: column;
+  }
+
+  .ecommerce-card-header {
+    flex-wrap: wrap;
   }
 
   .control-row {

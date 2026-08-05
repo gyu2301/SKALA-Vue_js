@@ -62,6 +62,7 @@ import StoreCounter from './components/practices/library/StoreCounter.vue'
 // 11. Axios API
 import AxiosWeather from './components/practices/library/AxiosWeather.vue'
 import AxiosJson from './components/practices/library/AxiosJson.vue'
+import AxiosProducts from './components/practices/library/AxiosProducts.vue'
 
 // 12. UI Library
 import ElementPlusChallenge from './components/practices/library/ElementPlusChallenge.vue'
@@ -100,8 +101,11 @@ const currentChallenge = computed(() => challenges.find((challenge) => challenge
       <div class="header-copy">
         <span class="eyebrow">SKALA · VUE 3 CODE CHALLENGE</span>
         <h1>Vue.js Challenge 대쉬보드</h1>
-        <p>판교 8반 P275 최규원 Vue 기본 문법부터 Composition API, Component, Pinia, Axios API, Element Plus, Modern JavaScript까지 구현한 Challenge 결과입니다.</p>
+        <p>판교 8반 P275 최규원 <br>
+          Vue 기본 문법부터 Composition API, Component, Pinia, Axios API, Element Plus, Modern JavaScript까지 구현한 Challenge 결과입니다.</p>
 
+        <!-- [과제 확장 - 사이트 연결] 별도 배포된 skala-vue 날씨 앱으로 이동하는 링크. 두 프로젝트를 하나로 합치지 않고
+             서로 링크만 걸어주는 방식으로 연결했다 (skala-vue/src/App.vue에도 반대 방향 링크가 있다). -->
         <a class="sibling-link" href="https://skala-vue-jsweather-viewer.vercel.app" target="_blank" rel="noopener noreferrer">
           🌤️ Weather Viewer 사이트 보러가기 <span aria-hidden="true">↗</span>
         </a>
@@ -239,6 +243,7 @@ const currentChallenge = computed(() => challenges.find((challenge) => challenge
         <section v-else-if="dashboardStore.activeChallengeId === 11" class="challenge-examples">
           <AxiosWeather />
           <AxiosJson />
+          <AxiosProducts />
         </section>
 
         <section v-else-if="dashboardStore.activeChallengeId === 12" class="challenge-examples">

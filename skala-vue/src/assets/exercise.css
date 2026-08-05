@@ -76,6 +76,7 @@
   font-weight: 700;
 }
 
+/* [과제 확장 - 사이트 연결] code-challenge 프로젝트로 이동하는 링크 버튼 스타일 (App.vue 헤더 태그 아래에서 사용) */
 .sibling-link {
   display: inline-flex;
   align-items: center;

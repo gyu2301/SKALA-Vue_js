@@ -52,6 +52,7 @@
   color: var(--muted);
 }
 
+/* [과제 확장 - 사이트 연결] skala-vue 날씨 앱으로 이동하는 링크 버튼 스타일 (App.vue 헤더에서 사용) */
 .sibling-link {
   display: inline-flex;
   align-items: center;
