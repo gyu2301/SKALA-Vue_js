@@ -1,0 +1,15 @@
+npm notice run skala-vue@0.0.0 lint
+npm notice run run-s lint:*
+npm notice run skala-vue@0.0.0 lint:oxlint
+npm notice run oxlint src --fix
+Found 0 warnings and 0 errors.
+Finished in 24ms on 54 files with 93 rules using 10 threads.
+npm notice run skala-vue@0.0.0 lint:eslint
+npm notice run eslint . --fix --cache
+
+/Users/choigyuwon/Documents/SKALA/vue_js 프로젝트/code-challenge/src/components/practices/library/EcmaScriptChallenge.vue
+   60:12  warning  'error' is defined but never used  no-unused-vars
+  125:12  warning  'error' is defined but never used  no-unused-vars
+
+✖ 2 problems (0 errors, 2 warnings)
+

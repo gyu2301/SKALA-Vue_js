@@ -1,0 +1,8 @@
+npm notice run skala-vue@0.0.0 lint
+npm notice run run-s "lint:*"
+npm notice run skala-vue@0.0.0 lint:oxlint
+npm notice run oxlint . --fix
+Found 0 warnings and 0 errors.
+Finished in 6ms on 31 files with 114 rules using 10 threads.
+npm notice run skala-vue@0.0.0 lint:eslint
+npm notice run eslint . --fix --cache

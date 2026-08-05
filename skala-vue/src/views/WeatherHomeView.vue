@@ -9,8 +9,8 @@
  * [Weather Idea 구현]
  * 실시간 세계 바람 지구본과 비·눈·더위·건조 조건별 생활 날씨 알림을 추가했다.
  */
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue'
 import SearchBar from '@/components/exercise/SearchBar.vue'
 import WeatherCard from '@/components/exercise/WeatherCard.vue'
@@ -30,6 +30,7 @@ import {
   WIND_CALM,
 } from '@/constants/weatherThresholds'
 
+const route = useRoute()
 const router = useRouter()
 const configStore = useConfigStore()
 const weatherStore = useWeatherStore()
@@ -89,6 +90,13 @@ const {
   searchCity,
   addCityToDashboard,
 } = useWeatherSearch()
+
+// [검색 상태 고정] 상세페이지(/weather/:cityId)는 URL 경로에 상태가 담겨 새로고침에도
+// 유지되지만, 검색어는 지금까지 컴포넌트 로컬 상태(ref)라 새로고침하면 사라졌다.
+// URL 쿼리(?weather=도시명)에 검색어를 반영해 같은 방식으로 고정한다.
+if (typeof route.query.weather === 'string' && route.query.weather) {
+  searchQuery.value = route.query.weather
+}
 
 const selectedCityId = ref('')
 const selectedCityInfo = ref('카드를 클릭하거나 검색해 보세요.')
@@ -251,6 +259,33 @@ const addAndSelect = (city) => {
 // 검색어를 비워 검색 결과/필터를 정리하고 전체 도시 목록으로 복귀한다.
 const backToDashboard = () => {
   searchQuery.value = ''
+}
+
+// [검색 상태 고정] searchQuery가 바뀔 때마다 URL의 weather 쿼리에 반영한다. history를
+// 쌓지 않도록 push 대신 replace를 쓴다. (예: 검색 → 새로고침해도 ?weather=수원 이 남아있음)
+watch(searchQuery, (value) => {
+  const current = typeof route.query.weather === 'string' ? route.query.weather : ''
+  if (value === current) return
+
+  const nextQuery = { ...route.query }
+  if (value) nextQuery.weather = value
+  else delete nextQuery.weather
+  router.replace({ query: nextQuery })
+})
+
+// [검색 상태 고정] 새로고침 직후에는 대시보드 목록이 아직 없어 filteredWeatherList로
+// 바로 판단할 수 없다. weatherStore.hasFetched가 true가 되는(목록 로딩 완료) 시점에
+// 딱 한 번 selectFirstMatch를 재실행해 URL에서 복원한 검색어를 실제 검색 상태로 반영한다.
+if (searchQuery.value) {
+  const stopRestoreWatch = watch(
+    () => weatherStore.hasFetched,
+    (fetched) => {
+      if (!fetched) return
+      selectFirstMatch()
+      stopRestoreWatch()
+    },
+    { immediate: true },
+  )
 }
 </script>
 
