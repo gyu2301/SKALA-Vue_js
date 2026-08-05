@@ -24,7 +24,7 @@ const props = defineProps({
   isSelected: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['select-card', 'click-detail'])
+const emit = defineEmits(['select-card', 'click-detail', 'remove-city'])
 
 const STATUS_ICON = {
   맑음: '☀️',
@@ -82,6 +82,13 @@ const onDetail = (event) => {
   emit('click-detail', props.city)
 }
 
+// [카드 삭제] 기본 8개 도시든 검색으로 추가한 도시든 동일하게 삭제 버튼을 노출한다.
+// stopPropagation으로 카드 선택(select-card)이 함께 발생하지 않게 막는다.
+const onRemove = (event) => {
+  event.stopPropagation()
+  emit('remove-city', props.city)
+}
+
 // v-memo 효과 확인용: 이 카드가 실제로 리렌더링(패치)될 때마다 콘솔에 남긴다.
 // WeatherParent 에서 v-memo="[city.id === selectedCityId]" 를 걸어두면,
 // 이 카드의 선택 여부가 안 바뀌는 한 다른 카드가 선택되거나 도움말이 토글돼도
@@ -99,6 +106,17 @@ onUpdated(() => {
     :title="`${city.name}의 현재 상태: ${city.status}`"
     @click="emit('select-card', city)"
   >
+    <!-- [카드 삭제] 새로고침하면 기본 8개 도시는 다시 채워지므로, 여기서는 화면(메모리)에서만 지운다. -->
+    <button
+      type="button"
+      class="remove-btn"
+      :aria-label="`${city.name} 카드 삭제`"
+      :title="`${city.name} 삭제`"
+      @click="onRemove"
+    >
+      ✕
+    </button>
+
     <div class="card-topline">
       <div>
         <h4>{{ city.name }}</h4>
@@ -171,6 +189,44 @@ onUpdated(() => {
   border-color: #b8d9cd;
   box-shadow: 0 12px 24px rgba(39, 56, 73, 0.09);
   transform: translateY(-2px);
+}
+
+.remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  z-index: 1;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: #f2f4f7;
+  color: #98a2b3;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+/* 평소에는 숨겨두고, 카드에 마우스를 올리거나(hover) 버튼 자체가 키보드 포커스를
+   받을 때만(focus-visible) 보이게 한다. */
+.weather-card:hover .remove-btn,
+.remove-btn:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.remove-btn:hover {
+  background: #fef3f2;
+  color: #b42318;
 }
 /* 선택된 카드 강조 (:class 객체 바인딩으로 붙는다) */
 .weather-card.is-selected {

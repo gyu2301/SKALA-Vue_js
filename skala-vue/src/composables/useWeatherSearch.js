@@ -48,5 +48,6 @@ export function useWeatherSearch() {
     searchResults: computed(() => weatherStore.searchResults),
     searchCity: weatherStore.searchCity,
     addCityToDashboard: weatherStore.addCityToDashboard,
+    removeCityFromDashboard: weatherStore.removeCityFromDashboard,
   }
 }

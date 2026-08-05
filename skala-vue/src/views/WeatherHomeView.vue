@@ -89,6 +89,7 @@ const {
   searchResults,
   searchCity,
   addCityToDashboard,
+  removeCityFromDashboard,
 } = useWeatherSearch()
 
 // [검색 상태 고정] 상세페이지(/weather/:cityId)는 URL 경로에 상태가 담겨 새로고침에도
@@ -226,6 +227,14 @@ const selectCity = (city) => {
 const clearSelection = () => {
   selectedCityId.value = ''
   selectedCityInfo.value = '카드를 클릭하거나 검색해 보세요.'
+}
+
+// [카드 삭제] 기본 8개 도시든 직접 추가한 도시든 동일하게 삭제할 수 있다. 새로고침하면
+// fetchWeatherList가 기본 8개를 다시 채우므로, 삭제 자체는 이번 화면에서만 유지된다.
+const removeCity = (city) => {
+  if (selectedCityId.value === city.id) clearSelection()
+  removeCityFromDashboard(city.id)
+  ElMessage.info(`${city.name}을(를) 대시보드에서 지웠어요. 새로고침하면 다시 나타나요.`)
 }
 
 // 상세보기: alert 대신 상세 페이지로 이동한다.
@@ -377,6 +386,7 @@ if (searchQuery.value) {
           :is-selected="city.id === selectedCityId"
           @select-card="selectCity"
           @click-detail="showDetail"
+          @remove-city="removeCity"
         />
       </div>
 

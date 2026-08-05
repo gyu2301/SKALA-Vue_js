@@ -629,6 +629,13 @@ export const useWeatherStore = defineStore('weather', () => {
     searchResults.value = searchResults.value.filter((result) => result.id !== city.id)
   }
 
+  // 대시보드 카드의 "삭제"를 처리한다. 기본 8개 도시든 검색으로 추가한 도시든 구분 없이
+  // weatherList(메모리 상태)에서만 지운다. CITY_CONFIG(기본 도시 목록) 자체는 그대로라서
+  // 새로고침하면 fetchWeatherList가 다시 8개 전부를 채운다 — 삭제는 새로고침 전까지만 유지된다.
+  function removeCityFromDashboard(cityId) {
+    weatherList.value = weatherList.value.filter((city) => city.id !== cityId)
+  }
+
   return {
     weatherList,
     isLoading,
@@ -655,6 +662,7 @@ export const useWeatherStore = defineStore('weather', () => {
     fetchWeatherList,
     searchCity,
     addCityToDashboard,
+    removeCityFromDashboard,
     fetchCityForecast,
     fetchAirQuality,
     fetchCityInsights,
