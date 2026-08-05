@@ -98,14 +98,7 @@ onUnmounted(() => {
 
         <div class="register-form">
           <label for="element-email">이메일 주소</label>
-          <el-input
-            id="element-email"
-            v-model.trim="userForm.email"
-            type="email"
-            placeholder="example@email.com"
-            clearable
-            @keyup.enter="handleRegister"
-          />
+          <el-input id="element-email" v-model.trim="userForm.email" type="email" placeholder="example@email.com" clearable @keyup.enter="handleRegister" />
 
           <div class="agreement-row">
             <el-switch v-model="userForm.agree" aria-label="개인정보 수집 및 이용약관 동의" />
@@ -171,14 +164,7 @@ onUnmounted(() => {
           </div>
 
           <div class="progress-area">
-            <el-progress
-              :percentage="downloadProgress"
-              :stroke-width="12"
-              :status="downloadProgress === 100 ? 'success' : ''"
-              striped
-              striped-flow
-              :duration="8"
-            />
+            <el-progress :percentage="downloadProgress" :stroke-width="12" :status="downloadProgress === 100 ? 'success' : ''" striped striped-flow :duration="8" />
             <small>{{ downloadProgress === 100 ? '동기화가 완료되었습니다.' : '버튼을 누르면 게이지가 20%씩 증가합니다.' }}</small>
           </div>
         </div>

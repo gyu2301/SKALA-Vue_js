@@ -76,6 +76,27 @@
   font-weight: 700;
 }
 
+.sibling-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 14px;
+  border: 1px solid #d6eee5;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--vue-green-dark);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.sibling-link:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
 .weather-overview {
   position: relative;
   min-height: 205px;

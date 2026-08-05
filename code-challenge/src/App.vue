@@ -69,6 +69,9 @@ import ElementPlusChallenge from './components/practices/library/ElementPlusChal
 // 13. Modern JavaScript (ES6+)
 import EcmaScriptChallenge from './components/practices/library/EcmaScriptChallenge.vue'
 
+// 14. Vite 빌드 및 실무 배포
+import ViteBuildChallenge from './components/practices/library/ViteBuildChallenge.vue'
+
 const dashboardStore = useLearningStore()
 
 const challenges = [
@@ -85,6 +88,7 @@ const challenges = [
   { id: 11, icon: '🌐', title: 'Axios API', description: 'Weather API와 REST CRUD 요청' },
   { id: 12, icon: '🎨', title: 'UI 라이브러리', description: 'Element Plus 컴포넌트 활용' },
   { id: 13, icon: '🧬', title: 'Modern JavaScript', description: 'ES6+ 구조분해·스프레드·Async 실무 패턴' },
+  { id: 14, icon: '🚀', title: 'Vite 빌드 및 배포', description: 'ESLint·Prettier 커스텀 규칙, env 파일, Production Build' },
 ]
 
 const currentChallenge = computed(() => challenges.find((challenge) => challenge.id === dashboardStore.activeChallengeId))
@@ -95,26 +99,23 @@ const currentChallenge = computed(() => challenges.find((challenge) => challenge
     <header class="dashboard-header">
       <div class="header-copy">
         <span class="eyebrow">SKALA · VUE 3 CODE CHALLENGE</span>
-        <h1> Vue.js Challenge 대쉬보드</h1>
+        <h1>Vue.js Challenge 대쉬보드</h1>
         <p>판교 8반 P275 최규원 Vue 기본 문법부터 Composition API, Component, Pinia, Axios API, Element Plus, Modern JavaScript까지 구현한 Challenge 결과입니다.</p>
+
+        <a class="sibling-link" href="https://skala-vue-jsweather-viewer.vercel.app" target="_blank" rel="noopener noreferrer">
+          🌤️ Weather Viewer 사이트 보러가기 <span aria-hidden="true">↗</span>
+        </a>
       </div>
 
       <div class="progress-card">
         <div class="progress-summary">
           <div>
             <span>Challenge 확인 현황</span>
-            <strong>{{ dashboardStore.completedCount }} / 13 확인</strong>
+            <strong>{{ dashboardStore.completedCount }} / 14 확인</strong>
           </div>
           <b>{{ dashboardStore.progressRate }}%</b>
         </div>
-        <div
-          class="progress-track"
-          role="progressbar"
-          aria-label="Challenge 확인 현황"
-          :aria-valuenow="dashboardStore.progressRate"
-          aria-valuemin="0"
-          aria-valuemax="100"
-        >
+        <div class="progress-track" role="progressbar" aria-label="Challenge 확인 현황" :aria-valuenow="dashboardStore.progressRate" aria-valuemin="0" aria-valuemax="100">
           <span :style="{ width: `${dashboardStore.progressRate}%` }"></span>
         </div>
         <div class="progress-footer">
@@ -163,11 +164,7 @@ const currentChallenge = computed(() => challenges.find((challenge) => challenge
           </div>
 
           <label class="complete-toggle">
-            <input
-              type="checkbox"
-              :checked="dashboardStore.isCompleted(currentChallenge.id)"
-              @change="dashboardStore.toggleChallenge(currentChallenge.id)"
-            />
+            <input type="checkbox" :checked="dashboardStore.isCompleted(currentChallenge.id)" @change="dashboardStore.toggleChallenge(currentChallenge.id)" />
             <span>확인 완료</span>
           </label>
         </header>
@@ -248,14 +245,18 @@ const currentChallenge = computed(() => challenges.find((challenge) => challenge
           <ElementPlusChallenge />
         </section>
 
-        <section v-else class="challenge-examples">
+        <section v-else-if="dashboardStore.activeChallengeId === 13" class="challenge-examples">
           <EcmaScriptChallenge />
+        </section>
+
+        <section v-else class="challenge-examples">
+          <ViteBuildChallenge />
         </section>
 
         <footer class="challenge-pagination">
           <button type="button" :disabled="dashboardStore.activeChallengeId === 1" @click="dashboardStore.moveChallenge(-1)">← 이전 Challenge</button>
-          <span>{{ dashboardStore.activeChallengeId }} / 13</span>
-          <button type="button" :disabled="dashboardStore.activeChallengeId === 13" @click="dashboardStore.moveChallenge(1)">다음 Challenge →</button>
+          <span>{{ dashboardStore.activeChallengeId }} / 14</span>
+          <button type="button" :disabled="dashboardStore.activeChallengeId === 14" @click="dashboardStore.moveChallenge(1)">다음 Challenge →</button>
         </footer>
       </main>
     </div>

@@ -163,9 +163,7 @@ onMounted(readItems)
 
     <div v-else class="loading-state">표시할 게시물이 없습니다. POST로 새 데이터를 추가해 보세요.</div>
 
-    <p class="fake-api-note">
-      <strong>연습용 API 안내:</strong> JSONPlaceholder는 POST·PUT·DELETE 응답을 반환하지만 서버 데이터는 실제로 영구 변경되지 않습니다.
-    </p>
+    <p class="fake-api-note"><strong>연습용 API 안내:</strong> JSONPlaceholder는 POST·PUT·DELETE 응답을 반환하지만 서버 데이터는 실제로 영구 변경되지 않습니다.</p>
   </div>
 </template>
 

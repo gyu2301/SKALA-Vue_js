@@ -1,7 +1,7 @@
 <template>
   <div class="base-card">
     <slot>
-      <p> basic content.</p>
+      <p>basic content.</p>
     </slot>
   </div>
 </template>

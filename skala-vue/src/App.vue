@@ -19,6 +19,10 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
           <span>📊 24시간 예보</span>
           <span>🧥 옷차림 추천</span>
         </div>
+
+        <a class="sibling-link" href="https://skala-vue-jscode-challenge.vercel.app" target="_blank" rel="noopener noreferrer">
+          🧪 Vue Code Challenge 사이트 보러가기 <span aria-hidden="true">↗</span>
+        </a>
       </div>
 
       <div class="weather-overview" aria-label="날씨 서비스 안내">
