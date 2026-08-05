@@ -61,6 +61,73 @@ const runTask3 = async () => {
     result3.value = '통신 실패'
   }
 }
+
+const result4 = ref('')
+
+const runTask4 = () => {
+  const orders = [
+    { item: '아메리카노', price: 4500, qty: 2 },
+    { item: '카페라떼', price: 5000, qty: 1 },
+    { item: '녹차', price: 4000, qty: 3 },
+  ]
+
+  // 1. filter → map → reduce 체이닝으로 2개 이상 주문한 금액만 합산
+  const total = orders
+    .filter((order) => order.qty >= 2)
+    .map((order) => order.price * order.qty)
+    .reduce((sum, amount) => sum + amount, 0)
+
+  // 2. 구조분해 매개변수로 필요한 필드만 추출해 요약 문자열 생성
+  const summary = orders.map(({ item, qty }) => `${item} x${qty}`).join(', ')
+
+  result4.value = `2개 이상 주문 합계: ${total.toLocaleString()}원 / 전체 주문: ${summary}`
+}
+
+// 실전 API 연동: Open Trivia DB (키 발급 불필요)
+const quiz = ref(null)
+const quizLoading = ref(false)
+const quizError = ref('')
+
+const decodeText = (text) => decodeURIComponent(text)
+
+const buildQuestion = ({ results: [q] }) => {
+  // 배열 스프레드로 정답 + 오답을 합친 뒤 무작위 정렬
+  const choices = [...q.incorrect_answers, q.correct_answer].map(decodeText).sort(() => Math.random() - 0.5)
+
+  return {
+    category: decodeText(q.category),
+    question: decodeText(q.question),
+    answer: decodeText(q.correct_answer),
+    choices,
+  }
+}
+
+const runTask5 = async () => {
+  quizLoading.value = true
+  quizError.value = ''
+  quiz.value = null
+
+  try {
+    // 1. Promise.all로 두 카테고리의 퀴즈를 동시에 요청 (병렬 async/await)
+    const [generalRes, scienceRes] = await Promise.all([
+      fetch('https://opentdb.com/api.php?amount=1&type=multiple&category=9&encode=url3986'),
+      fetch('https://opentdb.com/api.php?amount=1&type=multiple&category=17&encode=url3986'),
+    ])
+
+    if (!generalRes.ok || !scienceRes.ok) {
+      throw new Error('네트워크 오류')
+    }
+
+    // 2. 두 응답을 병렬로 JSON 파싱
+    const [generalData, scienceData] = await Promise.all([generalRes.json(), scienceRes.json()])
+
+    quiz.value = [buildQuestion(generalData), buildQuestion(scienceData)]
+  } catch (error) {
+    quizError.value = '퀴즈를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'
+  } finally {
+    quizLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -83,6 +150,33 @@ const runTask3 = async () => {
       <h3>과제 3. 비동기 연쇄 파이프라인 (Async/Await)</h3>
       <button @click="runTask3">과제 3 가동</button>
       <div class="console">결과창 3: {{ result3 }}</div>
+    </div>
+
+    <div class="card">
+      <h3>과제 4. 배열 고차함수 파이프라인 (filter·map·reduce)</h3>
+      <button @click="runTask4">과제 4 가동</button>
+      <div class="console">결과창 4: {{ result4 }}</div>
+    </div>
+
+    <div class="card">
+      <h3>과제 5. 실전 API 연동 — 잡학 퀴즈 뽑기 (Open Trivia DB · fetch)</h3>
+      <button @click="runTask5" :disabled="quizLoading">
+        {{ quizLoading ? '퀴즈 불러오는 중...' : '과제 5 가동' }}
+      </button>
+
+      <p v-if="quizError" class="quiz-error" role="alert">{{ quizError }}</p>
+
+      <div v-if="quiz" class="quiz-result">
+        <article v-for="q in quiz" :key="q.question" class="quiz-question">
+          <span class="quiz-category">{{ q.category }}</span>
+          <p>{{ q.question }}</p>
+          <ul>
+            <li v-for="choice in q.choices" :key="choice" :class="{ correct: choice === q.answer }">
+              {{ choice }}
+            </li>
+          </ul>
+        </article>
+      </div>
     </div>
   </div>
 </template>
@@ -115,5 +209,58 @@ button:hover {
   margin-top: 12px;
   font-family: monospace;
   font-size: 14px;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.quiz-error {
+  padding: 10px 12px;
+  margin-top: 12px;
+  border-radius: 6px;
+  background: #fff1f3;
+  color: #c01048;
+  font-size: 13px;
+}
+.quiz-result {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.quiz-question {
+  padding: 14px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: white;
+}
+.quiz-category {
+  color: #409eff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.quiz-question p {
+  margin: 6px 0 10px;
+  font-weight: 600;
+}
+.quiz-question ul {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.quiz-question li {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.quiz-question li.correct {
+  border-color: #67c23a;
+  background: #f0f9eb;
+  color: #529b2e;
+  font-weight: 700;
 }
 </style>
