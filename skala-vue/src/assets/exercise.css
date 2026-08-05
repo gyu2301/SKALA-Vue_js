@@ -206,6 +206,10 @@
   margin-top: 22px;
 }
 
+.dashboard-layout.has-globe-panel {
+  grid-template-columns: 240px minmax(0, 1fr) 300px;
+}
+
 .app-navigation,
 .dashboard-content {
   border: 1px solid var(--line);
@@ -348,6 +352,11 @@
   font-size: 8px;
 }
 
+.app-globe-panel {
+  position: sticky;
+  top: 18px;
+}
+
 #desktop-globe-slot:empty {
   display: none;
 }
@@ -419,11 +428,13 @@
     min-height: 230px;
   }
 
-  .dashboard-layout {
+  .dashboard-layout,
+  .dashboard-layout.has-globe-panel {
     grid-template-columns: 1fr;
   }
 
-  .app-navigation {
+  .app-navigation,
+  .app-globe-panel {
     position: static;
   }
 

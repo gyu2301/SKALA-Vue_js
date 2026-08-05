@@ -157,14 +157,14 @@ const zoomOut = () => {
 }
 
 .earth-card.is-compact .earth-frame-wrap {
-  height: 285px;
+  height: 400px;
 }
 
-/* 외부 지구본에 충분한 렌더링 폭을 주고 결과만 사이드바 크기로 축소해 지구 전체가 보이게 한다. */
+/* 외부 지구본에 충분한 렌더링 폭을 주고 결과만 패널 크기로 축소해 지구 전체가 보이게 한다. */
 .earth-card.is-compact iframe {
   width: 760px;
   height: 1018px;
-  transform: scale(0.28);
+  transform: scale(0.393);
   transform-origin: top left;
 }
 

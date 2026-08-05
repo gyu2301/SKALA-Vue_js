@@ -47,7 +47,7 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
       </div>
     </header>
 
-    <div class="dashboard-layout">
+    <div class="dashboard-layout" :class="{ 'has-globe-panel': $route.name === 'weather-home' }">
       <aside class="app-navigation">
         <div class="navigation-title">
           <span>WEATHER MENU</span>
@@ -96,13 +96,6 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
           </RouterLink>
         </nav>
 
-        <!--
-          [반응형 지구본]
-          넓은 화면에서 실시간 지구본이 Teleport로 WEATHER MENU 바로 아래에 배치된다.
-          1050px 이하에서는 Teleport가 해제되어 본문의 도시 카드 아래로 돌아간다.
-        -->
-        <div v-if="$route.name === 'weather-home'" id="desktop-globe-slot"></div>
-
         <div class="unit-panel">
           <div>
             <span>DISPLAY UNIT</span>
@@ -135,6 +128,15 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
 
         <RouterView />
       </main>
+
+      <!--
+        [반응형 지구본]
+        넓은 화면에서 실시간 지구본이 Teleport로 본문 오른쪽 패널에 배치된다.
+        1050px 이하에서는 Teleport가 해제되어 본문의 도시 카드 아래로 돌아간다.
+      -->
+      <aside v-if="$route.name === 'weather-home'" class="app-globe-panel">
+        <div id="desktop-globe-slot"></div>
+      </aside>
     </div>
 
     <footer class="dashboard-footer">

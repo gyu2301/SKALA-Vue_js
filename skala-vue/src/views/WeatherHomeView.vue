@@ -107,7 +107,7 @@ const locationError = ref('')
 const locationNotice = ref('')
 let desktopMediaQuery
 
-// 1050px을 기준으로 지구본을 왼쪽 WEATHER MENU 아래로 옮기거나 본문 하단으로 복귀시킨다.
+// 1050px을 기준으로 지구본을 본문 오른쪽 패널로 옮기거나 본문 하단으로 복귀시킨다.
 const updateLayoutMode = (event) => {
   isWideScreen.value = event.matches
 }
@@ -408,11 +408,14 @@ if (searchQuery.value) {
           />
           <el-button plain round @click="backToDashboard">← 대시보드로 돌아가기</el-button>
         </div>
+        <div v-else-if="!isLoading && !errorMessage && searchQuery" class="empty-state">
+          <el-button plain round @click="backToDashboard">← 대시보드로 돌아가기</el-button>
+        </div>
       </template>
     </BaseDashboardCard>
 
     <!--
-      넓은 화면: 지구본을 App.vue의 WEATHER MENU 아래로 Teleport
+      넓은 화면: 지구본을 App.vue의 본문 오른쪽 패널로 Teleport
       좁은 화면: Teleport를 비활성화해 도시 카드 아래에 표시
     -->
     <Teleport to="#desktop-globe-slot" :disabled="!isWideScreen">
@@ -504,7 +507,7 @@ if (searchQuery.value) {
 
 .weather-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
 }
 
