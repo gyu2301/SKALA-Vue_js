@@ -324,7 +324,7 @@ button.challenge-menu.completed:not(.active) {
   background: var(--line);
 }
 
-button:not(.challenge-menu) {
+button:not(.challenge-menu):not(.el-button) {
   padding: 7px 12px;
   border: 1px solid #d0d5dd;
   border-radius: 8px;
@@ -338,7 +338,7 @@ button:not(.challenge-menu) {
     transform 0.15s ease;
 }
 
-button:not(.challenge-menu):not(:disabled):hover {
+button:not(.challenge-menu):not(.el-button):not(:disabled):hover {
   border-color: #98a2b3;
   background: #f9fafb;
   transform: translateY(-1px);
@@ -358,14 +358,14 @@ button.primary-action:not(:disabled):hover,
   color: white;
 }
 
-button:disabled {
+button:disabled:not(.el-button) {
   border-color: #eaecf0;
   background: #f2f4f7;
   color: #98a2b3;
   cursor: not-allowed;
 }
 
-input:not([type='radio']):not([type='checkbox']),
+input:not([type='radio']):not([type='checkbox']):not(.el-input__inner),
 select,
 textarea {
   max-width: 100%;
@@ -377,7 +377,7 @@ textarea {
   color: #344054;
 }
 
-input:focus,
+input:not(.el-input__inner):focus,
 select:focus,
 textarea:focus {
   border-color: var(--vue-green);

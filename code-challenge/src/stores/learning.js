@@ -7,7 +7,7 @@ export const useLearningStore = defineStore('learning-progress', () => {
   const lastViewedMessage = ref('Challenge 1을 확인해주세요.')
 
   const completedCount = computed(() => completedChallenges.value.length)
-  const progressRate = computed(() => Math.round((completedCount.value / 11) * 100))
+  const progressRate = computed(() => Math.round((completedCount.value / 12) * 100))
 
   watch(activeChallengeId, (newId, oldId) => {
     lastViewedMessage.value = `Challenge ${oldId} 확인 후 Challenge ${newId} 내용을 보고 있습니다.`
@@ -38,7 +38,7 @@ export const useLearningStore = defineStore('learning-progress', () => {
 
   function moveChallenge(direction) {
     const nextId = activeChallengeId.value + direction
-    if (nextId >= 1 && nextId <= 11) {
+    if (nextId >= 1 && nextId <= 12) {
       activeChallengeId.value = nextId
     }
   }

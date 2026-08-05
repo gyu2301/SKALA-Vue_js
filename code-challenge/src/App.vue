@@ -63,6 +63,9 @@ import StoreCounter from './components/practices/library/StoreCounter.vue'
 import AxiosWeather from './components/practices/library/AxiosWeather.vue'
 import AxiosJson from './components/practices/library/AxiosJson.vue'
 
+// 12. UI Library
+import ElementPlusChallenge from './components/practices/library/ElementPlusChallenge.vue'
+
 const dashboardStore = useLearningStore()
 
 const challenges = [
@@ -77,6 +80,7 @@ const challenges = [
   { id: 9, icon: '🗂️', title: 'Component Slot', description: 'Default·Named·Scoped Slot' },
   { id: 10, icon: '🍍', title: 'Pinia', description: '전역 Store 상태 관리' },
   { id: 11, icon: '🌐', title: 'Axios API', description: 'Weather API와 REST CRUD 요청' },
+  { id: 12, icon: '🎨', title: 'UI 라이브러리', description: 'Element Plus 컴포넌트 활용' },
 ]
 
 const currentChallenge = computed(() => challenges.find((challenge) => challenge.id === dashboardStore.activeChallengeId))
@@ -88,14 +92,14 @@ const currentChallenge = computed(() => challenges.find((challenge) => challenge
       <div class="header-copy">
         <span class="eyebrow">SKALA · VUE 3 CODE CHALLENGE</span>
         <h1> Vue.js Challenge 대쉬보드</h1>
-        <p>판교 8반 P275 최규원 Vue 기본 문법부터 Composition API, Component, Pinia, Axios API까지 구현한 Challenge 결과입니다.</p>
+        <p>판교 8반 P275 최규원 Vue 기본 문법부터 Composition API, Component, Pinia, Axios API, Element Plus까지 구현한 Challenge 결과입니다.</p>
       </div>
 
       <div class="progress-card">
         <div class="progress-summary">
           <div>
             <span>Challenge 확인 현황</span>
-            <strong>{{ dashboardStore.completedCount }} / 11 확인</strong>
+            <strong>{{ dashboardStore.completedCount }} / 12 확인</strong>
           </div>
           <b>{{ dashboardStore.progressRate }}%</b>
         </div>
@@ -231,15 +235,19 @@ const currentChallenge = computed(() => challenges.find((challenge) => challenge
           <StoreCounter />
         </section>
 
-        <section v-else class="challenge-examples">
+        <section v-else-if="dashboardStore.activeChallengeId === 11" class="challenge-examples">
           <AxiosWeather />
           <AxiosJson />
         </section>
 
+        <section v-else class="challenge-examples">
+          <ElementPlusChallenge />
+        </section>
+
         <footer class="challenge-pagination">
           <button type="button" :disabled="dashboardStore.activeChallengeId === 1" @click="dashboardStore.moveChallenge(-1)">← 이전 Challenge</button>
-          <span>{{ dashboardStore.activeChallengeId }} / 11</span>
-          <button type="button" :disabled="dashboardStore.activeChallengeId === 11" @click="dashboardStore.moveChallenge(1)">다음 Challenge →</button>
+          <span>{{ dashboardStore.activeChallengeId }} / 12</span>
+          <button type="button" :disabled="dashboardStore.activeChallengeId === 12" @click="dashboardStore.moveChallenge(1)">다음 Challenge →</button>
         </footer>
       </main>
     </div>
