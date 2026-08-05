@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
+    // [실습 8] 메인 메타 설명을 실시간 지구본 중심으로 갱신했다.
     path: '/',
     name: 'weather-home',
     component: () => import('@/views/WeatherHomeView.vue'),
@@ -9,7 +10,7 @@ const routes = [
       label: 'LIVE WEATHER',
       icon: '📊',
       title: '날씨 대시보드',
-      description: '관심 도시의 실시간 날씨를 검색하고 한눈에 비교해 보세요.',
+      description: '회전하는 지구본과 함께 전 세계 날씨를 한눈에 살펴보세요.',
     },
   },
   {
@@ -24,6 +25,7 @@ const routes = [
     },
   },
   {
+    // [실습 8] 상세 화면은 24시간 예보와 옷차림 추천을 제공한다.
     path: '/weather/:cityId',
     name: 'weather-detail',
     component: () => import('@/views/WeatherDetailView.vue'),
@@ -31,7 +33,7 @@ const routes = [
       label: 'CITY OBSERVATION',
       icon: '📍',
       title: '지역별 상세 관측',
-      description: '선택한 도시의 기온, 습도, 풍속을 자세히 확인하세요.',
+      description: '선택한 도시의 24시간 예보와 시간대별 옷차림을 확인하세요.',
     },
   },
   {

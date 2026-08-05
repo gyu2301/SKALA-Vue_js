@@ -1,44 +1,33 @@
-# skala-vue
+# SKALA Weather Experience
 
-This template should help get you started developing with Vue 3 in Vite.
+Element Plus를 활용해 3일차 날씨 대시보드를 확장한 Vue 3 프로젝트입니다.
 
-## Recommended IDE Setup
+## 핵심 기능
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- `earth.nullschool.net` 실시간 바람 지구본: 드래그 회전, 확대/축소, 세계 기류 확인
+- OpenWeatherMap 도시 검색과 실시간 기온·습도·풍속
+- 비·눈·폭염·건조 조건에 따른 생활 날씨 알림
+- Today's Brief는 브라우저 현재 좌표를 우선 사용하고, 좌표 획득 실패 시 네트워크 기반 대략 위치로 대체
+- 도시 상세 화면의 24시간 기온/강수 확률 차트
+- 아침·점심·오후·저녁 시간대별 옷차림 추천
+- 섭씨/화씨 전역 단위 전환
 
-## Recommended Browser Setup
+## Element Plus 활용 부분
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+`ElInput`, `ElButton`, `ElCard`, `ElAlert`, `ElTag`, `ElProgress`, `ElSkeleton`,
+`ElEmpty`, `ElRadioGroup`, `ElMessage`, `ElLink`를 검색·피드백·상태 표시에 적용했습니다.
 
-## Customize configuration
+## 실행 방법
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+`.env`에 OpenWeatherMap API key를 설정합니다.
 
-## Project Setup
+```sh
+VITE_OPENWEATHER_API_KEY=your_api_key
+```
 
 ```sh
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+지구본은 외부 실시간 데이터를 사용하므로 인터넷 연결이 필요합니다.

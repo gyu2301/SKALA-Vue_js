@@ -2,6 +2,16 @@
 
 :root {
   color-scheme: light;
+
+  /* [실습 8 - Element Plus 테마]
+     Element Plus의 기본 파란색을 날씨 서비스 파레트에 맞게 전역 CSS 변수로 커스텀했다. */
+  --el-color-primary: #1685c7;
+  --el-color-primary-light-3: #55a6d7;
+  --el-color-primary-light-5: #8bc5e7;
+  --el-color-primary-light-8: #deeff9;
+  --el-color-primary-light-9: #eff8fd;
+  --el-color-primary-dark-2: #116b9f;
+  --el-border-radius-base: 10px;
   --color-background: #f3f7f6;
   --color-background-soft: #f8faf9;
   --color-heading: #182230;

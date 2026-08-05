@@ -1,4 +1,9 @@
 <script setup>
+/**
+ * [실습 8 - Element Plus 날씨 카드]
+ * 기존 div/button/badge/gauge를 ElCard, ElButton, ElTag, ElProgress로 교체했다.
+ * 선택·hover 효과와 상세보기 emit은 유지하면서 도시 주소와 큰 기온 표시를 추가했다.
+ */
 import { computed, onUpdated } from 'vue'
 import {
   HOT_THRESHOLD,
@@ -20,8 +25,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['select-card', 'click-detail'])
-
-const GAUGE_MAX_TEMP = 40
 
 const STATUS_ICON = {
   맑음: '☀️',
@@ -46,12 +49,16 @@ const toDisplayTemp = (celsius) => {
 const displayTemp = computed(() => toDisplayTemp(props.city.temp))
 
 // 기온을 막대 길이(%)와 색상으로 표현한다.
-const gaugeStyle = computed(() => {
-  const ratio = Math.min(Math.max(props.city.temp / GAUGE_MAX_TEMP, 0), 1)
-  return {
-    width: `${Math.round(ratio * 100)}%`,
-    backgroundColor: props.city.temp >= HOT_THRESHOLD ? '#ff7675' : '#74b9ff',
-  }
+// ElProgress에 넘길 수 있도록 -10~40℃ 구간을 0~100%로 변환한다.
+const gaugePercentage = computed(() => {
+  const ratio = Math.min(Math.max((props.city.temp + 10) / 50, 0), 1)
+  return Math.round(ratio * 100)
+})
+
+const temperatureColor = computed(() => {
+  if (props.city.temp >= HOT_THRESHOLD) return '#f56c6c'
+  if (props.city.temp >= MILD_THRESHOLD) return '#e6a23c'
+  return '#409eff'
 })
 
 // 습도가 높을수록 물방울, 낮을수록 건조함을 직관적으로 표현한다.
@@ -85,29 +92,44 @@ onUpdated(() => {
 </script>
 
 <template>
-  <div
+  <!-- [Element Plus] 날씨 요약 전체를 ElCard로 구성 -->
+  <el-card
     class="weather-card"
     :class="{ 'is-selected': isSelected }"
     :title="`${city.name}의 현재 상태: ${city.status}`"
     @click="emit('select-card', city)"
   >
-    <h4>{{ city.name }}</h4>
-    <p>현재 기온: {{ displayTemp }}{{ configStore.unitSymbol }}</p>
-    <p class="status-line">{{ statusIcon }} {{ city.status }}</p>
-
-    <span v-if="city.temp >= HOT_THRESHOLD" class="badge hot">
-      더움 ({{ toDisplayTemp(HOT_THRESHOLD) }}{{ configStore.unitSymbol }} 이상)
-    </span>
-    <span v-else-if="city.temp >= MILD_THRESHOLD" class="badge mild">
-      보통 ({{ toDisplayTemp(MILD_THRESHOLD) }}~{{ toDisplayTemp(HOT_THRESHOLD - 1) }}{{ configStore.unitSymbol }})
-    </span>
-    <span v-else class="badge cool">
-      선선함 ({{ toDisplayTemp(MILD_THRESHOLD) }}{{ configStore.unitSymbol }} 미만)
-    </span>
-
-    <div class="gauge-track">
-      <div class="gauge-fill" :style="gaugeStyle"></div>
+    <div class="card-topline">
+      <div>
+        <h4>{{ city.name }}</h4>
+        <p class="address">{{ city.address }}</p>
+      </div>
+      <span class="weather-symbol" aria-hidden="true">{{ statusIcon }}</span>
     </div>
+
+    <div class="temperature-row">
+      <strong>{{ displayTemp }}<small>{{ configStore.unitSymbol }}</small></strong>
+      <el-tag round effect="light">{{ city.status }}</el-tag>
+    </div>
+
+    <el-tag v-if="city.temp >= HOT_THRESHOLD" class="temperature-tag" type="danger" effect="plain" round>
+      더움 ({{ toDisplayTemp(HOT_THRESHOLD) }}{{ configStore.unitSymbol }} 이상)
+    </el-tag>
+    <el-tag v-else-if="city.temp >= MILD_THRESHOLD" class="temperature-tag" type="warning" effect="plain" round>
+      보통 ({{ toDisplayTemp(MILD_THRESHOLD) }}~{{ toDisplayTemp(HOT_THRESHOLD - 1) }}{{ configStore.unitSymbol }})
+    </el-tag>
+    <el-tag v-else class="temperature-tag" type="primary" effect="plain" round>
+      선선함 ({{ toDisplayTemp(MILD_THRESHOLD) }}{{ configStore.unitSymbol }} 미만)
+    </el-tag>
+
+    <!-- 기온 구간을 ElProgress와 조건별 색상으로 시각화 -->
+    <el-progress
+      class="temperature-progress"
+      :percentage="gaugePercentage"
+      :color="temperatureColor"
+      :show-text="false"
+      :stroke-width="7"
+    />
 
     <div class="stats-row">
       <span class="stat-chip">{{ humidityIcon }} {{ city.humidity }}%</span>
@@ -119,17 +141,17 @@ onUpdated(() => {
       onDetail 이 event.stopPropagation() 까지 처리해주므로 부모는 @click="onDetail" 만 연결하면 된다.
     -->
     <slot name="detail-button" :city="city" :is-selected="isSelected" :on-detail="onDetail">
-      <button class="btn-detail" @click="onDetail">상세보기</button>
+      <el-button class="btn-detail" type="primary" plain @click="onDetail">
+        오늘의 생활 날씨 보기 →
+      </el-button>
     </slot>
-  </div>
+  </el-card>
 </template>
 
 <style scoped>
 .weather-card {
   position: relative;
-  min-height: 210px;
-  padding: 17px;
-  padding-right: 92px;
+  min-height: 260px;
   border: 1px solid #e4e7ec;
   border-radius: 14px;
   background: linear-gradient(145deg, #ffffff, #fbfdfc);
@@ -139,6 +161,10 @@ onUpdated(() => {
     box-shadow 0.18s ease,
     border-color 0.18s ease,
     transform 0.18s ease;
+}
+
+.weather-card :deep(.el-card__body) {
+  padding: 18px;
 }
 .weather-card:hover {
   border-color: #b8d9cd;
@@ -152,6 +178,14 @@ onUpdated(() => {
   box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.12);
 }
 
+.card-topline,
+.temperature-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .weather-card h4 {
   margin: 0 0 3px;
   color: #273849;
@@ -160,52 +194,45 @@ onUpdated(() => {
   letter-spacing: -0.02em;
 }
 
-.weather-card > p:not(.status-line) {
+.address {
+  overflow: hidden;
+  max-width: 170px;
+  margin: 4px 0 0;
   margin: 0;
-  color: #475467;
-  font-size: 13px;
+  color: #98a2b3;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.badge {
-  display: inline-block;
-  padding: 5px 9px;
-  border-radius: 999px;
-  color: #344054;
-  font-size: 11px;
+.weather-symbol {
+  font-size: 34px;
+  filter: drop-shadow(0 7px 9px rgba(39, 56, 73, 0.12));
+}
+
+.temperature-row {
+  margin: 18px 0 10px;
+}
+
+.temperature-row > strong {
+  color: #1b2b3b;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.temperature-row small {
+  color: #667085;
+  font-size: 15px;
   font-weight: 700;
 }
-.hot {
-  background-color: #ffe4e2;
-  color: #b42318;
-}
-.mild {
-  background-color: #fef0c7;
-  color: #93370d;
-}
-.cool {
-  background-color: #e0f2fe;
-  color: #026aa2;
+
+.temperature-tag {
+  max-width: 100%;
 }
 
-.status-line {
-  margin: 3px 0 12px;
-  color: #667085;
-  font-size: 12px;
-}
-
-.gauge-track {
-  height: 7px;
+.temperature-progress {
   margin-top: 13px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #eef1f4;
-}
-.gauge-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition:
-    width 0.3s ease,
-    background-color 0.3s ease;
 }
 
 .stats-row {
@@ -227,34 +254,17 @@ onUpdated(() => {
 }
 
 .btn-detail {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  padding: 6px 10px;
-  border: 1px solid #c9ded7;
-  border-radius: 8px;
-  background: #f5fbf9;
-  color: #24644f;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
-}
-.btn-detail:hover {
-  border-color: #42b883;
-  background: #effaf6;
+  width: 100%;
+  margin-top: 15px;
+  font-weight: 750;
 }
 
 @media (max-width: 440px) {
   .weather-card {
-    padding-right: 17px;
+    min-height: auto;
   }
 
   .btn-detail {
-    position: static;
-    width: 100%;
     margin-top: 13px;
   }
 }

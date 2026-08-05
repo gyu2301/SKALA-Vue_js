@@ -5,7 +5,12 @@ import axios from 'axios'
 // 7. Axios : OpenWeatherMap 실시간 날씨 데이터를 가져와 대시보드 전역에서 공유하는 스토어.
 // 도시 목록은 useWeatherSearch 의 Mock 데이터를 대체한다. (id/이름/주소는 고정, 기온·상태·습도·풍속만 API로 채운다.)
 const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather'
+
+// [실습 8 확장 - 24시간 예보]
+// 상세 화면의 기온/강수 그래프에 필요한 3시간 단위 예보 API를 추가했다.
+const FORECAST_API_URL = 'https://api.openweathermap.org/data/2.5/forecast'
 const GEO_API_URL = 'https://api.openweathermap.org/geo/1.0/direct'
+const IP_LOCATION_API_URL = 'https://ipwho.is/'
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 
 // 검색어 일부(prefix)만 입력해도 여러 도시가 매칭되게 하려고 이 목록을 직접 준비했다.
@@ -51,7 +56,19 @@ const CITY_DIRECTORY = [
   { id: 'dir_moscow', name: '모스크바', address: '러시아 모스크바', lat: 55.7558, lon: 37.6173 },
 ]
 
-const DEFAULT_CITY_IDS = ['city_01', 'city_02', 'city_03', 'city_04', 'city_05', 'city_06']
+// [실습 8 확장 - 세계 도시 구성]
+// 지구본에서 대륙별 날씨가 고르게 보이도록 기본 대시보드는 세계 도시로 구성한다.
+// 기존 국내 도시는 CITY_DIRECTORY에 그대로 남아 검색으로 즉시 추가할 수 있다.
+const DEFAULT_CITY_IDS = [
+  'city_01',
+  'city_03',
+  'dir_tokyo',
+  'dir_singapore',
+  'dir_newyork',
+  'dir_london',
+  'dir_paris',
+  'dir_sydney',
+]
 const CITY_CONFIG = CITY_DIRECTORY.filter((city) => DEFAULT_CITY_IDS.includes(city.id))
 
 // 검색어 하나로 매칭되는 도시가 아주 많아질 수 있으므로(prefix 특성상), 화면에는 최대 5개까지만 보여준다.
@@ -80,6 +97,16 @@ export const useWeatherStore = defineStore('weather', () => {
   // 검색으로 찾은 도시(들)를 담아두는 미리보기 목록. weatherList(대시보드 카드)와 분리해서,
   // 사용자가 "추가하기"를 눌러야만 weatherList로 옮겨지도록 한다.
   const searchResults = ref([])
+
+  // [실습 8 확장 - 상세 예보 상태]
+  // 도시별 예보를 id로 캐시하고, Element Plus Skeleton/Alert에 연결할 로딩·오류 상태를 관리한다.
+  const forecastByCity = ref({})
+  const forecastLoading = ref(false)
+  const forecastError = ref('')
+  const currentLocationCity = ref(null)
+  const currentLocationSource = ref('')
+  const currentLocationLoading = ref(false)
+  const currentLocationError = ref('')
 
   async function fetchWeatherList() {
     if (!API_KEY) {
@@ -111,6 +138,8 @@ export const useWeatherStore = defineStore('weather', () => {
           status: mapStatus(data),
           humidity: data.main.humidity,
           wind: data.wind.speed,
+          lat: city.lat,
+          lon: city.lon,
         }
       })
     } catch (error) {
@@ -231,6 +260,8 @@ export const useWeatherStore = defineStore('weather', () => {
                 status: mapStatus(data),
                 humidity: data.main.humidity,
                 wind: data.wind.speed,
+                lat: city.lat,
+                lon: city.lon,
               }
             }),
           )
@@ -275,6 +306,102 @@ export const useWeatherStore = defineStore('weather', () => {
       status: mapStatus(data),
       humidity: data.main.humidity,
       wind: data.wind.speed,
+      lat: place.lat,
+      lon: place.lon,
+    }
+  }
+
+  // [실습 8 확장 - 예보 API 로직]
+  // 상세 화면의 24시간 기온/강수량 차트용 3시간 단위 예보를 조회한다.
+  // OpenWeatherMap 5 day / 3 hour forecast는 무료 API key에서도 사용 가능하다.
+  async function fetchCityForecast(city) {
+    if (!city || forecastByCity.value[city.id] || forecastLoading.value) return
+
+    forecastLoading.value = true
+    forecastError.value = ''
+
+    try {
+      const response = await axios.get(FORECAST_API_URL, {
+        params: { lat: city.lat, lon: city.lon, appid: API_KEY, units: 'metric', lang: 'kr' },
+      })
+
+      forecastByCity.value = {
+        ...forecastByCity.value,
+        [city.id]: response.data.list.slice(0, 8).map((item) => ({
+          time: new Date(item.dt * 1000).toLocaleTimeString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          hour: new Date(item.dt * 1000).getHours(),
+          temp: Math.round(item.main.temp),
+          precipitation: Math.round((item.pop ?? 0) * 100),
+          status: mapStatus(item),
+        })),
+      }
+    } catch {
+      forecastError.value = '시간대별 예보를 불러오지 못했습니다.'
+    } finally {
+      forecastLoading.value = false
+    }
+  }
+
+  // [현재 위치 날씨] 브라우저가 제공한 위도/경도로 현재 날씨를 조회한다.
+  // 위치 권한을 거부한 경우는 API를 호출하지 않고 화면에서 서울 기준으로 대체한다.
+  async function fetchWeatherByCoordinates(lat, lon, source = 'device') {
+    if (!API_KEY) {
+      currentLocationError.value = 'OpenWeather API 키가 필요합니다.'
+      return null
+    }
+
+    currentLocationLoading.value = true
+    currentLocationError.value = ''
+
+    try {
+      const response = await axios.get(WEATHER_API_URL, {
+        params: { lat, lon, appid: API_KEY, units: 'metric', lang: 'kr' },
+      })
+      const data = response.data
+      const locationName = data.name || '현재 위치'
+
+      currentLocationCity.value = {
+        id: 'current_location',
+        name: locationName,
+        address: data.sys?.country ? `${locationName}, ${data.sys.country}` : '현재 위치',
+        temp: Math.round(data.main.temp),
+        status: mapStatus(data),
+        humidity: data.main.humidity,
+        wind: data.wind.speed,
+        lat: data.coord?.lat ?? lat,
+        lon: data.coord?.lon ?? lon,
+      }
+      currentLocationSource.value = source
+
+      return currentLocationCity.value
+    } catch {
+      currentLocationError.value = '현재 위치의 날씨를 불러오지 못했습니다.'
+      return null
+    } finally {
+      currentLocationLoading.value = false
+    }
+  }
+
+  // 브라우저/운영체제가 GPS·Wi-Fi 좌표를 제공하지 못하는 경우의 2차 대체 방법.
+  // 공인 IP의 도시 수준 대략적 위치를 얻어 Today's Brief가 항상 현재 지역을 기준으로 작동하게 한다.
+  async function fetchApproximateLocationWeather() {
+    currentLocationError.value = ''
+
+    try {
+      const response = await axios.get(IP_LOCATION_API_URL)
+      const place = response.data
+
+      if (!place.success || !Number.isFinite(place.latitude) || !Number.isFinite(place.longitude)) {
+        throw new Error('IP location unavailable')
+      }
+
+      return await fetchWeatherByCoordinates(place.latitude, place.longitude, 'network')
+    } catch {
+      currentLocationError.value = '현재 지역을 확인하지 못했습니다.'
+      return null
     }
   }
 
@@ -295,8 +422,18 @@ export const useWeatherStore = defineStore('weather', () => {
     isSearching,
     searchErrorMessage,
     searchResults,
+    forecastByCity,
+    forecastLoading,
+    forecastError,
+    currentLocationCity,
+    currentLocationSource,
+    currentLocationLoading,
+    currentLocationError,
     fetchWeatherList,
     searchCity,
     addCityToDashboard,
+    fetchCityForecast,
+    fetchWeatherByCoordinates,
+    fetchApproximateLocationWeather,
   }
 })

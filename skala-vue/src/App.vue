@@ -1,4 +1,5 @@
 <script setup>
+// [실습 8] 전역 헤더 문구와 기술 표기를 지구본·24시간 예보·옷차림·Element Plus 기준으로 갱신했다.
 import UnitToggler from '@/components/exercise/UnitToggler.vue'
 </script>
 
@@ -6,24 +7,24 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
   <div class="dashboard-shell">
     <header class="dashboard-header">
       <div class="header-copy">
-        <span class="eyebrow">SKALA · VUE 3 WEATHER DASHBOARD</span>
-        <h1>도시의 오늘을<br />한눈에 확인하세요.</h1>
+        <span class="eyebrow">SKALA · ELEMENT PLUS WEATHER EXPERIENCE</span>
+        <h1>세계 곳곳 도시들의 날씨<br /> 그리고 옷차림</h1>
         <p>
-          지역별 실시간 날씨를 검색하고 기온, 습도, 풍속의 차이를 직관적으로 비교할 수
-          있는 날씨 관측 대시보드입니다.
+          전 세계 바람을 지구본으로 살펴보고, 관심 도시의 24시간 예보와 생활 알림,
+          시간대별 옷차림을 확인하세요.
         </p>
 
         <div class="header-tags" aria-label="제공하는 날씨 정보">
-          <span>🌡️ 기온</span>
-          <span>💧 습도</span>
-          <span>🌬️ 풍속</span>
+          <span>🌍 실시간 지구본</span>
+          <span>📊 24시간 예보</span>
+          <span>🧥 옷차림 추천</span>
         </div>
       </div>
 
       <div class="weather-overview" aria-label="날씨 서비스 안내">
         <div class="overview-topline">
           <span class="live-badge"><i></i> LIVE DATA</span>
-          <span>OpenWeatherMap</span>
+          <span>ELEMENT PLUS UI</span>
         </div>
 
         <div class="overview-visual" aria-hidden="true">
@@ -33,8 +34,8 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
         </div>
 
         <div class="overview-copy">
-          <strong>내가 찾는 도시의 지금</strong>
-          <span>검색부터 상세 관측 정보까지 한 곳에서 확인하세요.</span>
+          <strong>날씨를 이해하는 새로운 방법</strong>
+          <span>보는 예보에서 행동을 알려주는 예보로.</span>
         </div>
       </div>
     </header>
@@ -66,6 +67,13 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
           </RouterLink>
         </nav>
 
+        <!--
+          [반응형 지구본]
+          넓은 화면에서 실시간 지구본이 Teleport로 WEATHER MENU 바로 아래에 배치된다.
+          1050px 이하에서는 Teleport가 해제되어 본문의 도시 카드 아래로 돌아간다.
+        -->
+        <div v-if="$route.name === 'weather-home'" id="desktop-globe-slot"></div>
+
         <div class="unit-panel">
           <div>
             <span>DISPLAY UNIT</span>
@@ -78,6 +86,7 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
           <span>●</span>
           OpenWeatherMap API 연결
         </p>
+
       </aside>
 
       <main class="dashboard-content">
@@ -101,7 +110,7 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
 
     <footer class="dashboard-footer">
       <strong>SKALA Weather Center</strong>
-      <span>Vue 3 · Pinia · Vue Router · Axios</span>
+      <span>Vue 3 · Element Plus · Pinia · Vue Router · Axios</span>
     </footer>
   </div>
 </template>

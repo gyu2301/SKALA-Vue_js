@@ -1,25 +1,44 @@
 <script setup>
+/**
+ * [실습 8 - Element Plus 검색 UI]
+ * 기존 native input/button을 ElInput의 prefix·append 슬롯과 ElButton으로 교체했다.
+ * clearable, large size, disabled 상태를 라이브러리 속성으로 처리하며 기존 v-model 검색 로직은 유지한다.
+ */
 // v-model.trim.lazy="searchQuery" 로 부모(WeatherParent)와 진짜 v-model 을 맺는다.
 // defineModel 은 modelModifiers 를 두 번째 반환값으로 노출하므로, 그 값을 직접 해석해서
 // trim / lazy 를 수동으로 구현한다. (네이티브 <input> 이 아니라 커스텀 컴포넌트라
 // 이 모디파이어들이 자동 적용되지 않는다.)
+import { ref, watch } from 'vue'
+
 const [searchQuery, modifiers] = defineModel({ type: String, required: true })
 
 const emit = defineEmits(['select-first'])
 
-const commitValue = (rawValue) => {
-  searchQuery.value = modifiers.trim ? rawValue.trim() : rawValue
+// 입력창에 실제로 보이는 값. 타이핑 중에는 trim을 적용하지 않아야 스페이스바가
+// 눌리는 즉시 지워지지 않는다(예전에는 매 keystroke마다 trim된 값을 model-value로
+// 되돌려 보내서 방금 입력한 공백이 렌더링에서 사라졌다).
+const displayValue = ref(searchQuery.value)
+
+// 부모가 searchQuery를 외부에서 바꾸는 경우(예: "대시보드로 돌아가기" 초기화)에도
+// 입력창 표시값을 함께 맞춘다.
+watch(searchQuery, (value) => {
+  if (value !== displayValue.value) displayValue.value = value
+})
+
+// lazy 모디파이어: 타이핑 중(input)에는 로컬 표시값만 갱신하고, blur/change 시점에만
+// trim된 값을 실제 v-model(searchQuery)로 커밋한다.
+const commit = () => {
+  const next = modifiers.trim ? displayValue.value.trim() : displayValue.value
+  displayValue.value = next
+  searchQuery.value = next
 }
 
-// lazy 모디파이어가 있으면 input(타이핑 즉시) 대신 change(포커스 아웃) 시점에만 반영한다.
-const handleInput = (event) => {
-  if (modifiers.lazy) return
-  commitValue(event.target.value)
+const handleInput = (value) => {
+  displayValue.value = value
 }
 
-const handleChange = (event) => {
-  if (!modifiers.lazy) return
-  commitValue(event.target.value)
+const handleChange = () => {
+  commit()
 }
 
 // Enter 는 "지금 입력값으로 검색해줘"라는 명시적 커밋 의도이므로,
@@ -32,12 +51,18 @@ const handleChange = (event) => {
 // (이 버그의 전체 원인/해결 기록은 @/stores/weatherStore.js 의 pendingSearches 위 주석 참고)
 const handleEnter = (event) => {
   if (event.isComposing) return
+  commit()
+  emit('select-first')
+}
 
-  commitValue(event.target.value)
+// "도시 찾기" 버튼도 blur 없이 바로 눌릴 수 있으므로 emit 전에 먼저 커밋해야 한다.
+const submitSearch = () => {
+  commit()
   emit('select-first')
 }
 
 const handleReset = () => {
+  displayValue.value = ''
   searchQuery.value = ''
 }
 </script>
@@ -51,19 +76,30 @@ const handleReset = () => {
       (:value + @input) 방식과 달리 필터링/로그가 "포커스를 벗어나거나 Enter 를 누를 때"
       까지 지연된다.
     -->
-    <input
-      type="text"
-      :value="searchQuery"
+    <!-- [Element Plus] prefix에 검색 아이콘, append에 도시 찾기 버튼을 배치한 복합 입력창 -->
+    <el-input
+      :model-value="displayValue"
+      size="large"
+      clearable
+      placeholder="도시 이름을 입력해 보세요. 예) 파리, 도쿄, 제주"
+      aria-label="도시 검색"
       @input="handleInput"
       @change="handleChange"
+      @clear="handleReset"
       @keyup.enter="handleEnter"
-      @keyup.esc="handleReset"
-      placeholder="도시 이름 입력 (Enter: 첫 결과 선택, 없으면 실시간 검색 / Esc: 초기화)"
-    />
-    <!-- 검색어가 없으면 누를 이유가 없으므로 비활성화 -->
-    <button class="btn-ghost" :disabled="searchQuery.length === 0" @click="handleReset">
-      초기화
-    </button>
+    >
+      <template #prefix><span aria-hidden="true">🔎</span></template>
+      <template #append>
+        <el-button
+          class="search-submit"
+          type="primary"
+          :disabled="displayValue.length === 0"
+          @click="submitSearch"
+        >
+          도시 찾기
+        </el-button>
+      </template>
+    </el-input>
   </div>
 
   <p>
@@ -73,56 +109,44 @@ const handleReset = () => {
 
 <style scoped>
 .search-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  width: 100%;
   margin-bottom: 9px;
 }
-input {
-  flex: 1;
-  width: auto;
-  min-width: 0;
-  min-height: 44px;
-  padding: 10px 13px;
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
-  outline: none;
-  background: #fdfefe;
-  font-size: 14px;
-  color: #344054;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-}
-input:focus {
-  border-color: var(--vue-green);
-  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.13);
-}
-input::placeholder {
-  color: #98a2b3;
+
+.search-row :deep(.el-input) {
+  width: 100%;
 }
 
-.btn-ghost {
-  min-height: 44px;
-  padding: 9px 14px;
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #475467;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
+.search-row :deep(.el-input-group__append) {
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0 11px 11px 0;
+  background: var(--el-color-primary);
+  box-shadow: none;
 }
-.btn-ghost:hover:not(:disabled) {
-  border-color: #98a2b3;
-  background: #f9fafb;
+
+.search-row :deep(.search-submit) {
+  width: 104px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 16px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+  font-weight: 750;
 }
-.btn-ghost:disabled {
-  border-color: #eaecf0;
+
+.search-row :deep(.search-submit:hover),
+.search-row :deep(.search-submit:focus) {
+  color: #fff;
+  background: var(--el-color-primary-dark-2);
+}
+
+.search-row :deep(.search-submit.is-disabled) {
+  color: #a8abb2;
   background: #f2f4f7;
-  color: #98a2b3;
-  cursor: not-allowed;
 }
 
 p {
@@ -136,10 +160,11 @@ p strong {
   font-weight: 750;
 }
 
-@media (max-width: 560px) {
-  .search-row {
-    align-items: stretch;
-    flex-direction: column;
+@media (max-width: 420px) {
+  .search-row :deep(.search-submit) {
+    width: 88px;
+    padding-inline: 10px;
+    font-size: 12px;
   }
 }
 </style>

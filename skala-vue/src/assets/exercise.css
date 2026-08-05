@@ -20,9 +20,9 @@
 .dashboard-header {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
-  gap: 38px;
+  gap: 28px;
   align-items: center;
-  padding: 40px 42px;
+  padding: 28px 32px;
   overflow: hidden;
   border: 1px solid rgba(66, 184, 131, 0.24);
   border-radius: 24px;
@@ -45,7 +45,7 @@
 .header-copy h1 {
   margin: 7px 0 14px;
   color: var(--vue-navy);
-  font-size: clamp(34px, 4.2vw, 54px);
+  font-size: clamp(30px, 3.5vw, 44px);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 1.1;
@@ -55,15 +55,15 @@
   max-width: 680px;
   margin: 0;
   color: var(--muted);
-  font-size: 15px;
-  line-height: 1.75;
+  font-size: 14px;
+  line-height: 1.65;
 }
 
 .header-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
 .header-tags span {
@@ -78,8 +78,8 @@
 
 .weather-overview {
   position: relative;
-  min-height: 260px;
-  padding: 20px;
+  min-height: 205px;
+  padding: 16px;
   overflow: hidden;
   border: 1px solid #d6eee5;
   border-radius: 20px;
@@ -120,20 +120,20 @@
 
 .overview-visual {
   position: relative;
-  height: 132px;
+  height: 104px;
 }
 
 .weather-orb {
   position: absolute;
-  top: 18px;
+  top: 10px;
   left: 50%;
   display: grid;
-  width: 92px;
-  height: 92px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.66);
   box-shadow: 0 14px 32px rgba(255, 186, 46, 0.22);
-  font-size: 54px;
+  font-size: 44px;
   place-items: center;
   transform: translateX(-50%);
 }
@@ -145,13 +145,13 @@
 }
 
 .cloud-one {
-  top: 67px;
+  top: 51px;
   left: 20%;
   font-size: 39px;
 }
 
 .cloud-two {
-  top: 39px;
+  top: 29px;
   right: 18%;
   font-size: 29px;
   opacity: 0.82;
@@ -326,9 +326,13 @@
   font-size: 8px;
 }
 
+#desktop-globe-slot:empty {
+  display: none;
+}
+
 .dashboard-content {
   min-width: 0;
-  padding: 28px;
+  padding: 22px;
 }
 
 .page-heading {
@@ -336,15 +340,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding-bottom: 22px;
-  margin-bottom: 20px;
+  padding-bottom: 15px;
+  margin-bottom: 16px;
   border-bottom: 1px solid var(--line);
 }
 
 .page-heading h2 {
   margin: 3px 0 4px;
   color: var(--vue-navy);
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.025em;
 }
