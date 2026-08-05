@@ -105,6 +105,10 @@ const handleReset = () => {
   <p>
     검색 중인 도시: <strong>{{ searchQuery || '(전체)' }}</strong>
   </p>
+  <!-- [안내 멘트] OpenWeatherMap Geocoding은 한글 도시명 부분 일치를 지원하지 않아
+       CITY_DIRECTORY 밖의 도시는 한국어로 찾히지 않는 경우가 있다(예: weatherStore.js의
+       searchByGeocoding 주석 참고). 검색 전에 미리 영어 재시도를 안내한다. -->
+  <p class="search-hint">💡 한국어로 검색해도 안 나오면 영어 도시명(예: Tokyo, Paris)으로 다시 검색해 보세요.</p>
 </template>
 
 <style scoped>
@@ -158,6 +162,11 @@ p {
 p strong {
   color: #087a55;
   font-weight: 750;
+}
+
+.search-hint {
+  margin-top: 4px;
+  color: #98a2b3;
 }
 
 @media (max-width: 420px) {

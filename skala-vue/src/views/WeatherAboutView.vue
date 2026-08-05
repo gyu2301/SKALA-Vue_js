@@ -3,6 +3,8 @@
  * [실습 8 - 서비스 소개]
  * 이번 실습에서 적용한 Element Plus 컴포넌트와 새로 추가한
  * 지구본·24시간 예보·옷차림·생활 알림 기능을 한눈에 설명하는 정적 페이지이다.
+ *
+ * [과제 확장 - 대기질 메뉴] 목록 맨 아래에 새로 추가한 대기질 정보 메뉴 소개 항목을 덧붙였다.
  */
 </script>
 
@@ -22,6 +24,8 @@
         <li><span>🧥</span><strong>옷차림 추천</strong><small>아침·점심·오후·저녁 기온별 스타일 가이드</small></li>
         <li><span>🛡️</span><strong>생활 날씨 알림</strong><small>비·눈·폭염·건조 조건별 행동 가이드</small></li>
         <li><span>⚡</span><strong>Vue 데이터 흐름</strong><small>Pinia, Router, Axios, Composition API 활용</small></li>
+        <!-- [과제 확장 - 대기질 메뉴] Modern JavaScript 과제 확장으로 추가한 새 메뉴/API 소개 항목 -->
+        <li><span>🌫️</span><strong>대기질 정보</strong><small>OpenWeather Air Pollution API로 도시별 미세먼지·오존 지수 확인</small></li>
       </ul>
       <RouterLink class="btn-primary" to="/"><el-button type="primary" size="large">대시보드로 돌아가기</el-button></RouterLink>
     </el-card>

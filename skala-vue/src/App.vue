@@ -65,6 +65,28 @@ import UnitToggler from '@/components/exercise/UnitToggler.vue'
             </span>
             <span class="menu-arrow">›</span>
           </RouterLink>
+
+          <!-- [과제 확장 - 대기질 메뉴] Modern JavaScript 과제 확장으로 추가한 세 번째 메뉴.
+               router/index.js의 /air-quality 라우트로 연결된다. -->
+          <RouterLink class="navigation-menu" to="/air-quality">
+            <span class="menu-icon">🌫️</span>
+            <span class="menu-copy">
+              <strong>대기질 정보</strong>
+              <small>도시별 미세먼지 지수</small>
+            </span>
+            <span class="menu-arrow">›</span>
+          </RouterLink>
+
+          <!-- [과제 확장 - 도시 정보 메뉴] Modern JavaScript 과제 확장 2탄으로 추가한 네 번째 메뉴.
+               router/index.js의 /city-info 라우트로 연결된다. -->
+          <RouterLink class="navigation-menu" to="/city-info">
+            <span class="menu-icon">🕒</span>
+            <span class="menu-copy">
+              <strong>도시 정보</strong>
+              <small>현지 시각 · 위키 요약</small>
+            </span>
+            <span class="menu-arrow">›</span>
+          </RouterLink>
         </nav>
 
         <!--

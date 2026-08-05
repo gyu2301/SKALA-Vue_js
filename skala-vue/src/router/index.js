@@ -37,6 +37,32 @@ const routes = [
     },
   },
   {
+    // [과제 확장 - 대기질 메뉴] Modern JavaScript 과제 확장: 새 메뉴 + 새 API(OpenWeather
+    // Air Pollution) 연동 화면. App.vue의 사이드바 메뉴(RouterLink)에서 이 라우트로 진입한다.
+    path: '/air-quality',
+    name: 'weather-air-quality',
+    component: () => import('@/views/WeatherAirQualityView.vue'),
+    meta: {
+      label: 'AIR QUALITY',
+      icon: '🌫️',
+      title: '대기질 정보',
+      description: '대시보드 도시들의 실시간 미세먼지·대기질 지수를 확인하세요.',
+    },
+  },
+  {
+    // [과제 확장 - 도시 정보 메뉴] Modern JavaScript 과제 확장 2탄: 세계 시각(timeapi.io) +
+    // 위키백과 요약(Wikipedia REST API)을 도시별로 보여주는 화면.
+    path: '/city-info',
+    name: 'weather-city-info',
+    component: () => import('@/views/WeatherCityInsightView.vue'),
+    meta: {
+      label: 'CITY INFO',
+      icon: '🕒',
+      title: '도시 정보',
+      description: '대시보드 도시들의 현지 시각과 위키백과 요약을 확인하세요.',
+    },
+  },
+  {
     // Code Challenge 6. Pinia 연습용 라우트. nav bar에는 링크가 없으므로
     // 브라우저에서 이 경로(http://localhost:5173/practices/store-counter)로 직접 접속해야 확인할 수 있게 설계함.
     // 헷갈리지 않도록 따로 설계한 점 참고해주시면 감사하겠습니다!

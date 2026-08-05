@@ -141,8 +141,9 @@ onUpdated(() => {
       onDetail 이 event.stopPropagation() 까지 처리해주므로 부모는 @click="onDetail" 만 연결하면 된다.
     -->
     <slot name="detail-button" :city="city" :is-selected="isSelected" :on-detail="onDetail">
+      <!-- [과제 확장] 문구가 길어서 "상세 날씨 보기"로 줄였다. -->
       <el-button class="btn-detail" type="primary" plain @click="onDetail">
-        오늘의 생활 날씨 보기 →
+        상세 날씨 보기 →
       </el-button>
     </slot>
   </el-card>

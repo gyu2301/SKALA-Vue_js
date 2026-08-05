@@ -11,6 +11,17 @@ const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather'
 const FORECAST_API_URL = 'https://api.openweathermap.org/data/2.5/forecast'
 const GEO_API_URL = 'https://api.openweathermap.org/geo/1.0/direct'
 const IP_LOCATION_API_URL = 'https://ipwho.is/'
+
+// [과제 확장 - 대기질 메뉴] Modern JavaScript 과제 확장: 새 메뉴(대기질 정보)에서 쓸 API.
+// 별도 키 발급 없이 기존 OpenWeatherMap API_KEY를 그대로 재사용할 수 있는 무료 엔드포인트다.
+const AIR_POLLUTION_API_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
+
+// [과제 확장 - 도시 정보 메뉴] Modern JavaScript 과제 확장 2탄: 새 메뉴(도시 정보)에서 쓸 API 두 개.
+// 둘 다 키 발급이 필요 없는 무료 API다.
+const TIME_API_URL = 'https://timeapi.io/api/time/current/zone'
+const WIKIPEDIA_SUMMARY_API_URL = 'https://ko.wikipedia.org/api/rest_v1/page/summary'
+// "파리" 같은 동음이의어(곤충 vs 도시) 문서를 걸렀을 때, 실제 도시 문서를 다시 찾기 위한 검색 API.
+const WIKIPEDIA_SEARCH_API_URL = 'https://ko.wikipedia.org/w/api.php'
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 
 // 검색어 일부(prefix)만 입력해도 여러 도시가 매칭되게 하려고 이 목록을 직접 준비했다.
@@ -18,42 +29,46 @@ const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 // (실제 확인 결과: q=코펜 → 전혀 다른 인도네시아 마을(Kopen)이 매칭됨, q=프랑크 → 결과 없음).
 // 그래서 이미 알고 있는 도시 이름 목록(CITY_DIRECTORY) 안에서 먼저 부분 일치를 검색하고,
 // 그 안에 없는 도시만 Geocoding으로 정확한 이름을 찾는 2단계 방식으로 설계했다.
+// [과제 확장 - 도시 정보 메뉴] 각 도시에 IANA 타임존 문자열을 추가했다.
+// 세계 시각(timeapi.io)은 위경도가 아니라 타임존 이름으로 조회하는 API라서 필요하다.
+// 검색(Geocoding)으로 새로 찾은 도시는 타임존을 모르므로 undefined로 남고,
+// 이후 로직에서는 city.timezone 존재 여부로 세계 시각 조회를 건너뛴다.
 const CITY_DIRECTORY = [
   // 국내 주요 도시 (city_01~06는 초기 대시보드에 자동 로딩되는 기본 6개 도시)
-  { id: 'city_01', name: '서울', address: '대한민국 서울특별시', lat: 37.5665, lon: 126.978 },
-  { id: 'city_02', name: '수원', address: '대한민국 경기도 수원시', lat: 37.2636, lon: 127.0286 },
-  { id: 'city_03', name: '부산', address: '대한민국 부산광역시', lat: 35.1796, lon: 129.0756 },
-  { id: 'city_04', name: '철원', address: '대한민국 강원특별자치도 철원군', lat: 38.1465, lon: 127.3132 },
-  { id: 'city_05', name: '광주', address: '대한민국 광주광역시', lat: 35.1595, lon: 126.8526 },
-  { id: 'city_06', name: '울산', address: '대한민국 울산광역시', lat: 35.5384, lon: 129.3114 },
-  { id: 'dir_incheon', name: '인천', address: '대한민국 인천광역시', lat: 37.4563, lon: 126.7052 },
-  { id: 'dir_daejeon', name: '대전', address: '대한민국 대전광역시', lat: 36.3504, lon: 127.3845 },
-  { id: 'dir_daegu', name: '대구', address: '대한민국 대구광역시', lat: 35.8714, lon: 128.6014 },
-  { id: 'dir_chuncheon', name: '춘천', address: '대한민국 강원특별자치도 춘천시', lat: 37.8813, lon: 127.7298 },
-  { id: 'dir_jeju', name: '제주', address: '대한민국 제주특별자치도 제주시', lat: 33.4996, lon: 126.5312 },
-  { id: 'dir_jeonju', name: '전주', address: '대한민국 전북특별자치도 전주시', lat: 35.8242, lon: 127.148 },
+  { id: 'city_01', name: '서울', address: '대한민국 서울특별시', lat: 37.5665, lon: 126.978, timezone: 'Asia/Seoul' },
+  { id: 'city_02', name: '수원', address: '대한민국 경기도 수원시', lat: 37.2636, lon: 127.0286, timezone: 'Asia/Seoul' },
+  { id: 'city_03', name: '부산', address: '대한민국 부산광역시', lat: 35.1796, lon: 129.0756, timezone: 'Asia/Seoul' },
+  { id: 'city_04', name: '철원', address: '대한민국 강원특별자치도 철원군', lat: 38.1465, lon: 127.3132, timezone: 'Asia/Seoul' },
+  { id: 'city_05', name: '광주', address: '대한민국 광주광역시', lat: 35.1595, lon: 126.8526, timezone: 'Asia/Seoul' },
+  { id: 'city_06', name: '울산', address: '대한민국 울산광역시', lat: 35.5384, lon: 129.3114, timezone: 'Asia/Seoul' },
+  { id: 'dir_incheon', name: '인천', address: '대한민국 인천광역시', lat: 37.4563, lon: 126.7052, timezone: 'Asia/Seoul' },
+  { id: 'dir_daejeon', name: '대전', address: '대한민국 대전광역시', lat: 36.3504, lon: 127.3845, timezone: 'Asia/Seoul' },
+  { id: 'dir_daegu', name: '대구', address: '대한민국 대구광역시', lat: 35.8714, lon: 128.6014, timezone: 'Asia/Seoul' },
+  { id: 'dir_chuncheon', name: '춘천', address: '대한민국 강원특별자치도 춘천시', lat: 37.8813, lon: 127.7298, timezone: 'Asia/Seoul' },
+  { id: 'dir_jeju', name: '제주', address: '대한민국 제주특별자치도 제주시', lat: 33.4996, lon: 126.5312, timezone: 'Asia/Seoul' },
+  { id: 'dir_jeonju', name: '전주', address: '대한민국 전북특별자치도 전주시', lat: 35.8242, lon: 127.148, timezone: 'Asia/Seoul' },
 
   // 해외 주요 도시
-  { id: 'dir_tokyo', name: '도쿄', address: '일본 도쿄도', lat: 35.6762, lon: 139.6503 },
-  { id: 'dir_osaka', name: '오사카', address: '일본 오사카부', lat: 34.6937, lon: 135.5023 },
-  { id: 'dir_beijing', name: '베이징', address: '중국 베이징시', lat: 39.9042, lon: 116.4074 },
-  { id: 'dir_shanghai', name: '상하이', address: '중국 상하이시', lat: 31.2304, lon: 121.4737 },
-  { id: 'dir_hongkong', name: '홍콩', address: '중국 홍콩', lat: 22.3193, lon: 114.1694 },
-  { id: 'dir_taipei', name: '타이베이', address: '대만 타이베이시', lat: 25.033, lon: 121.5654 },
-  { id: 'dir_bangkok', name: '방콕', address: '태국 방콕', lat: 13.7563, lon: 100.5018 },
-  { id: 'dir_singapore', name: '싱가포르', address: '싱가포르', lat: 1.3521, lon: 103.8198 },
-  { id: 'dir_newyork', name: '뉴욕', address: '미국 뉴욕주 뉴욕시', lat: 40.7128, lon: -74.006 },
-  { id: 'dir_losangeles', name: '로스앤젤레스', address: '미국 캘리포니아주 로스앤젤레스', lat: 34.0522, lon: -118.2437 },
-  { id: 'dir_london', name: '런던', address: '영국 런던', lat: 51.5074, lon: -0.1278 },
-  { id: 'dir_paris', name: '파리', address: '프랑스 파리', lat: 48.8566, lon: 2.3522 },
-  { id: 'dir_berlin', name: '베를린', address: '독일 베를린', lat: 52.52, lon: 13.405 },
-  { id: 'dir_frankfurt', name: '프랑크푸르트', address: '독일 헤센주 프랑크푸르트', lat: 50.1109, lon: 8.6821 },
-  { id: 'dir_copenhagen', name: '코펜하겐', address: '덴마크 코펜하겐', lat: 55.6761, lon: 12.5683 },
-  { id: 'dir_rome', name: '로마', address: '이탈리아 로마', lat: 41.9028, lon: 12.4964 },
-  { id: 'dir_madrid', name: '마드리드', address: '스페인 마드리드', lat: 40.4168, lon: -3.7038 },
-  { id: 'dir_sydney', name: '시드니', address: '호주 뉴사우스웨일스주 시드니', lat: -33.8688, lon: 151.2093 },
-  { id: 'dir_dubai', name: '두바이', address: '아랍에미리트 두바이', lat: 25.2048, lon: 55.2708 },
-  { id: 'dir_moscow', name: '모스크바', address: '러시아 모스크바', lat: 55.7558, lon: 37.6173 },
+  { id: 'dir_tokyo', name: '도쿄', address: '일본 도쿄도', lat: 35.6762, lon: 139.6503, timezone: 'Asia/Tokyo' },
+  { id: 'dir_osaka', name: '오사카', address: '일본 오사카부', lat: 34.6937, lon: 135.5023, timezone: 'Asia/Tokyo' },
+  { id: 'dir_beijing', name: '베이징', address: '중국 베이징시', lat: 39.9042, lon: 116.4074, timezone: 'Asia/Shanghai' },
+  { id: 'dir_shanghai', name: '상하이', address: '중국 상하이시', lat: 31.2304, lon: 121.4737, timezone: 'Asia/Shanghai' },
+  { id: 'dir_hongkong', name: '홍콩', address: '중국 홍콩', lat: 22.3193, lon: 114.1694, timezone: 'Asia/Hong_Kong' },
+  { id: 'dir_taipei', name: '타이베이', address: '대만 타이베이시', lat: 25.033, lon: 121.5654, timezone: 'Asia/Taipei' },
+  { id: 'dir_bangkok', name: '방콕', address: '태국 방콕', lat: 13.7563, lon: 100.5018, timezone: 'Asia/Bangkok' },
+  { id: 'dir_singapore', name: '싱가포르', address: '싱가포르', lat: 1.3521, lon: 103.8198, timezone: 'Asia/Singapore' },
+  { id: 'dir_newyork', name: '뉴욕', address: '미국 뉴욕주 뉴욕시', lat: 40.7128, lon: -74.006, timezone: 'America/New_York' },
+  { id: 'dir_losangeles', name: '로스앤젤레스', address: '미국 캘리포니아주 로스앤젤레스', lat: 34.0522, lon: -118.2437, timezone: 'America/Los_Angeles' },
+  { id: 'dir_london', name: '런던', address: '영국 런던', lat: 51.5074, lon: -0.1278, timezone: 'Europe/London' },
+  { id: 'dir_paris', name: '파리', address: '프랑스 파리', lat: 48.8566, lon: 2.3522, timezone: 'Europe/Paris' },
+  { id: 'dir_berlin', name: '베를린', address: '독일 베를린', lat: 52.52, lon: 13.405, timezone: 'Europe/Berlin' },
+  { id: 'dir_frankfurt', name: '프랑크푸르트', address: '독일 헤센주 프랑크푸르트', lat: 50.1109, lon: 8.6821, timezone: 'Europe/Berlin' },
+  { id: 'dir_copenhagen', name: '코펜하겐', address: '덴마크 코펜하겐', lat: 55.6761, lon: 12.5683, timezone: 'Europe/Copenhagen' },
+  { id: 'dir_rome', name: '로마', address: '이탈리아 로마', lat: 41.9028, lon: 12.4964, timezone: 'Europe/Rome' },
+  { id: 'dir_madrid', name: '마드리드', address: '스페인 마드리드', lat: 40.4168, lon: -3.7038, timezone: 'Europe/Madrid' },
+  { id: 'dir_sydney', name: '시드니', address: '호주 뉴사우스웨일스주 시드니', lat: -33.8688, lon: 151.2093, timezone: 'Australia/Sydney' },
+  { id: 'dir_dubai', name: '두바이', address: '아랍에미리트 두바이', lat: 25.2048, lon: 55.2708, timezone: 'Asia/Dubai' },
+  { id: 'dir_moscow', name: '모스크바', address: '러시아 모스크바', lat: 55.7558, lon: 37.6173, timezone: 'Europe/Moscow' },
 ]
 
 // [실습 8 확장 - 세계 도시 구성]
@@ -74,6 +89,11 @@ const CITY_CONFIG = CITY_DIRECTORY.filter((city) => DEFAULT_CITY_IDS.includes(ci
 // 검색어 하나로 매칭되는 도시가 아주 많아질 수 있으므로(prefix 특성상), 화면에는 최대 5개까지만 보여준다.
 const MAX_SEARCH_RESULTS = 5
 
+// [과제 확장 - 검색 후보 리스트] "Paris"처럼 여러 나라에 같은 이름의 도시가 있을 수 있어서,
+// Geocoding에는 여유 있게 요청한 뒤(같은 도시의 지역어 중복도 섞여 온다) 화면에는 최대 5개까지만 보여준다.
+const GEOCODING_FETCH_LIMIT = 8
+const MAX_GEOCODING_RESULTS = 5
+
 // WeatherCard 의 STATUS_ICON(맑음/비/구름/흐림/눈)에 맞춰 OpenWeatherMap 응답을 분류한다.
 // main 은 항상 영문이라 lang 파라미터와 무관하게 직접 매핑이 필요하다.
 function mapStatus(data) {
@@ -85,6 +105,53 @@ function mapStatus(data) {
   if (main === 'Clear') return '맑음'
   if (main === 'Clouds') return cloudiness > 50 ? '흐림' : '구름'
   return '흐림'
+}
+
+// [과제 확장 - 도시 정보 버그 수정]
+// "파리"로 위키 요약을 바로 조회하면 도시가 아니라 곤충(파리)을 설명하는 동음이의어
+// 문서가 걸린다(위키백과에서 실제 확인: type이 "disambiguation"). 이런 경우에는
+// MediaWiki 검색 API로 "{도시명} 도시"를 검색해 실제 도시 문서 제목을 찾고, 그 제목으로
+// 요약을 다시 조회한다. 검색 결과가 없으면 원래(동음이의어) 응답이라도 그대로 반환한다.
+//
+// [한계] 이 이름 기반 검색은 "Paris"처럼 한글 이름이 없는 도시에서는 훨씬 유명한 동명의
+// 다른 대상(예: 축구 구단 "파리 생제르맹 FC")을 잘못 고르기도 한다. 그래서 CITY_DIRECTORY
+// 밖에서 검색으로 추가된 도시(id가 "search_"로 시작)에 한해 좌표 기반 GeoSearch를 먼저
+// 시도한다 — 실제 텍사스주 Paris에서는 정확히 맞았지만, 도시 자체에 좌표 태그가 없거나
+// (예: 켄터키주 Paris는 도시가 아니라 인근 카운티 문서가 걸림) 도심에 다른 시설(대사관 등)이
+// 몰려 있는 경우엔 여전히 부정확할 수 있다. 그래서 이미 잘 맞고 있는 기본 8개 대시보드
+// 도시(CITY_DIRECTORY)에는 이 GeoSearch 우선 조회를 적용하지 않는다.
+async function resolveWikipediaSummary(city) {
+  if (city.id.startsWith('search_')) {
+    const geoTitle = await findNearestWikipediaTitle(city.lat, city.lon)
+    if (geoTitle) {
+      const geoResponse = await axios.get(`${WIKIPEDIA_SUMMARY_API_URL}/${encodeURIComponent(geoTitle)}`)
+      if (geoResponse.data.type !== 'disambiguation') return geoResponse
+    }
+  }
+
+  const directResponse = await axios.get(`${WIKIPEDIA_SUMMARY_API_URL}/${encodeURIComponent(city.name)}`)
+  if (directResponse.data.type !== 'disambiguation') return directResponse
+
+  const searchResponse = await axios.get(WIKIPEDIA_SEARCH_API_URL, {
+    params: { action: 'query', list: 'search', srsearch: `${city.name} 도시`, format: 'json', srlimit: 1, origin: '*' },
+  })
+
+  // 배열 구조분해로 검색 결과 1건(top 1)만 바로 꺼낸다.
+  const [topResult] = searchResponse.data.query.search
+  if (!topResult) return directResponse
+
+  return axios.get(`${WIKIPEDIA_SUMMARY_API_URL}/${encodeURIComponent(topResult.title)}`)
+}
+
+// 좌표에서 가장 가까운 위키백과 문서 제목을 찾는다(MediaWiki GeoSearch API).
+// 이름이 아니라 위치로 찾기 때문에, 이름 검색이 엉뚱한 동명의 유명한 대상을 고르는 문제를 피한다.
+async function findNearestWikipediaTitle(lat, lon) {
+  const response = await axios.get(WIKIPEDIA_SEARCH_API_URL, {
+    params: { action: 'query', list: 'geosearch', gscoord: `${lat}|${lon}`, gsradius: 10000, gslimit: 1, format: 'json', origin: '*' },
+  })
+
+  // 옵셔널 체이닝 + 널 병합: 반경 내에 문서가 없으면 조용히 null을 돌려주고 이름 검색으로 넘어간다.
+  return response.data.query?.geosearch?.[0]?.title ?? null
 }
 
 export const useWeatherStore = defineStore('weather', () => {
@@ -107,6 +174,16 @@ export const useWeatherStore = defineStore('weather', () => {
   const currentLocationSource = ref('')
   const currentLocationLoading = ref(false)
   const currentLocationError = ref('')
+
+  // [과제 확장 - 대기질 상태] forecastByCity와 같은 방식으로 도시 id별 대기질 데이터를 캐시한다.
+  const airQualityByCity = ref({})
+  const isLoadingAirQuality = ref(false)
+  const airQualityError = ref('')
+
+  // [과제 확장 - 도시 정보 상태] 도시 id별로 { localTime, wiki } 를 캐시한다.
+  const cityInsightsByCity = ref({})
+  const isLoadingCityInsights = ref(false)
+  const cityInsightsError = ref('')
 
   async function fetchWeatherList() {
     if (!API_KEY) {
@@ -140,6 +217,8 @@ export const useWeatherStore = defineStore('weather', () => {
           wind: data.wind.speed,
           lat: city.lat,
           lon: city.lon,
+          // [과제 확장 - 도시 정보 메뉴] 세계 시각 조회에 필요한 타임존을 함께 담아 보낸다.
+          timezone: city.timezone,
         }
       })
     } catch (error) {
@@ -187,8 +266,9 @@ export const useWeatherStore = defineStore('weather', () => {
   // 도시를 검색한다. 결과는 항상 배열(0~5개)로 반환한다.
   //   1) CITY_DIRECTORY 안에서 이름에 검색어가 포함되는 도시를 최대 5개까지 찾는다.
   //      ('울' → 울산/서울, '프랑크' → 프랑크푸르트 처럼 부분 입력도 매칭된다)
-  //   2) 하나도 없으면 CITY_DIRECTORY 밖의 임의 도시로 보고 Geocoding API로 정확한
-  //      이름 하나를 찾는다(이 경로는 부분 입력을 지원하지 않는다).
+  //   2) 하나도 없으면 CITY_DIRECTORY 밖의 임의 도시로 보고 Geocoding API로 후보 도시들을
+  //      찾는다(이 경로는 부분 입력을 지원하지 않는다). "Paris"처럼 같은 이름의 도시가
+  //      여러 나라에 있으면 후보를 전부(최대 5개) 반환해서 사용자가 직접 고르게 한다.
   function searchCity(query) {
     const trimmed = query.trim()
     if (!trimmed || !API_KEY) return Promise.resolve([])
@@ -216,14 +296,18 @@ export const useWeatherStore = defineStore('weather', () => {
         return prefixResults
       }
 
-      const exactResult = await searchByGeocoding(trimmed)
-      if (!exactResult) {
-        searchErrorMessage.value = `'${trimmed}'에 해당하는 도시를 찾을 수 없습니다. 다른 이름으로 검색해 보세요.`
+      // [과제 확장 - 검색 후보 리스트] "Paris" 같은 검색어는 나라별로 여러 도시가 매칭될 수 있어서
+      // searchByGeocoding이 후보 배열(0~5개)을 반환한다.
+      const geocodedResults = await searchByGeocoding(trimmed)
+      if (geocodedResults.length === 0) {
+        // [안내 멘트] Geocoding API는 한글 부분 일치를 지원하지 않아(위 CITY_DIRECTORY 주석 참고)
+        // CITY_DIRECTORY 밖의 도시는 한글로 못 찾는 경우가 많다. 영어 재시도를 바로 안내한다.
+        searchErrorMessage.value = `'${trimmed}'에 해당하는 도시를 찾을 수 없습니다. 영어 도시명(예: Tokyo, Paris)으로 다시 검색해 보세요.`
         return []
       }
 
-      searchResults.value = [exactResult]
-      return [exactResult]
+      searchResults.value = geocodedResults
+      return geocodedResults
     } catch {
       searchErrorMessage.value = '도시 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
       return []
@@ -262,6 +346,8 @@ export const useWeatherStore = defineStore('weather', () => {
                 wind: data.wind.speed,
                 lat: city.lat,
                 lon: city.lon,
+                // [과제 확장 - 도시 정보 메뉴] 세계 시각 조회에 필요한 타임존을 함께 담아 보낸다.
+                timezone: city.timezone,
               }
             }),
           )
@@ -271,44 +357,65 @@ export const useWeatherStore = defineStore('weather', () => {
     return matches.map((city) => alreadyAdded.get(city.id) ?? fetchedById.get(city.id))
   }
 
-  // CITY_DIRECTORY 에 없는 임의 도시를 Geocoding API로 찾는다(정확한 이름 필요).
-  // "추가하기" 클릭 전까지는 weatherList(대시보드)에 반영하지 않고 결과만 돌려준다.
+  // CITY_DIRECTORY 에 없는 임의 도시를 Geocoding API로 찾는다.
+  // [과제 확장 - 검색 후보 리스트] 예전에는 limit:1로 첫 번째 결과 하나만 썼는데, "Paris"처럼
+  // 같은 이름의 도시가 프랑스/미국(텍사스·켄터키주) 등 여러 나라에 있으면 항상 첫 매칭 하나만
+  // 보여줘서 다른 나라의 동명 도시를 고를 방법이 없었다. 여유 있게 여러 개를 요청해 후보 배열로
+  // 돌려주고, 사용자가 "검색 결과" 목록에서 원하는 도시를 직접 선택하게 한다.
+  // "추가하기" 클릭 전까지는 weatherList(대시보드)에 반영하지 않고 후보 목록만 돌려준다.
   async function searchByGeocoding(trimmed) {
     const geoResponse = await axios.get(GEO_API_URL, {
-      params: { q: trimmed, limit: 1, appid: API_KEY },
+      params: { q: trimmed, limit: GEOCODING_FETCH_LIMIT, appid: API_KEY },
     })
 
-    const place = geoResponse.data[0]
-    if (!place) return null
+    if (geoResponse.data.length === 0) return []
 
-    const id = `search_${place.lat.toFixed(2)}_${place.lon.toFixed(2)}`
-    const displayName = place.local_names?.ko ?? place.name
+    // Modern JS 포인트) Map을 이용해 "이름|국가|주(state)" 조합이 같은 중복 후보(OpenWeatherMap이
+    // 같은 도시를 지역어별로 여러 번 반환하는 경우가 있다)를 걸러내고, 서로 다른 실제 도시만
+    // 최대 MAX_GEOCODING_RESULTS개 남긴다.
+    const uniquePlaces = [
+      ...new Map(geoResponse.data.map((place) => [`${place.name}|${place.country}|${place.state ?? ''}`, place])).values(),
+    ].slice(0, MAX_GEOCODING_RESULTS)
 
-    // 좌표(id)뿐 아니라 이름으로도 중복을 확인한다. 기본/디렉터리 도시를 다시 검색하면
-    // 좌표 기반 id는 서로 다르게 계산되므로, 이름이 같으면 이미 대시보드에 있는 카드를 재사용한다.
+    // 좌표(id) 또는 이름으로 이미 대시보드에 있는 도시는 다시 API를 부르지 않고 그대로 재사용한다.
     const normalize = (name) => name.replace(/\s+/g, '')
-    const existing = weatherList.value.find(
-      (city) => city.id === id || normalize(city.name) === normalize(displayName),
+
+    return Promise.all(
+      uniquePlaces.map(async (place) => {
+        const id = `search_${place.lat.toFixed(2)}_${place.lon.toFixed(2)}`
+        const displayName = place.local_names?.ko ?? place.name
+
+        const existing = weatherList.value.find(
+          (city) => city.id === id || normalize(city.name) === normalize(displayName),
+        )
+        if (existing) return existing
+
+        const weatherResponse = await axios.get(WEATHER_API_URL, {
+          params: { lat: place.lat, lon: place.lon, appid: API_KEY, units: 'metric', lang: 'kr' },
+        })
+
+        const data = weatherResponse.data
+
+        // Modern JS 포인트) state 유무에 따라 주소 문자열을 다르게 구성해서, 같은 이름의 도시를
+        // 나라/주 단위로 구분할 수 있게 한다(예: "Paris, Ile-de-France, FR" vs "Paris, Texas, US").
+        const address =
+          place.country === 'KR'
+            ? `대한민국 ${displayName}`
+            : [place.name, place.state, place.country].filter(Boolean).join(', ')
+
+        return {
+          id,
+          name: displayName,
+          address,
+          temp: Math.round(data.main.temp),
+          status: mapStatus(data),
+          humidity: data.main.humidity,
+          wind: data.wind.speed,
+          lat: place.lat,
+          lon: place.lon,
+        }
+      }),
     )
-    if (existing) return existing
-
-    const weatherResponse = await axios.get(WEATHER_API_URL, {
-      params: { lat: place.lat, lon: place.lon, appid: API_KEY, units: 'metric', lang: 'kr' },
-    })
-
-    const data = weatherResponse.data
-
-    return {
-      id,
-      name: displayName,
-      address: place.country === 'KR' ? `대한민국 ${displayName}` : `${place.name}, ${place.country}`,
-      temp: Math.round(data.main.temp),
-      status: mapStatus(data),
-      humidity: data.main.humidity,
-      wind: data.wind.speed,
-      lat: place.lat,
-      lon: place.lon,
-    }
   }
 
   // [실습 8 확장 - 예보 API 로직]
@@ -342,6 +449,114 @@ export const useWeatherStore = defineStore('weather', () => {
       forecastError.value = '시간대별 예보를 불러오지 못했습니다.'
     } finally {
       forecastLoading.value = false
+    }
+  }
+
+  // [과제 확장 - 대기질 API 로직]
+  // 대시보드 도시들의 미세먼지·대기질 지수를 한 번에 조회한다.
+  // fetchCityForecast와 같은 캐시 전략: 이미 값이 있는 도시는 다시 요청하지 않는다.
+  // Modern JS 포인트) Promise.all로 여러 도시를 병렬 요청하고, 각 응답은 중첩 구조분해
+  // (list: [{ main: { aqi }, components }])로 필요한 값만 바로 꺼낸다.
+  async function fetchAirQuality(cities) {
+    if (!API_KEY || !cities || cities.length === 0) return
+
+    const targets = cities.filter((city) => !airQualityByCity.value[city.id])
+    if (targets.length === 0) return
+
+    isLoadingAirQuality.value = true
+    airQualityError.value = ''
+
+    try {
+      const responses = await Promise.all(
+        targets.map((city) =>
+          axios.get(AIR_POLLUTION_API_URL, {
+            params: { lat: city.lat, lon: city.lon, appid: API_KEY },
+          }),
+        ),
+      )
+
+      // Modern JS 포인트) Object.fromEntries + map으로 [id, 데이터] 쌍의 배열을
+      // 객체로 한 번에 변환하고, 스프레드로 기존 캐시(airQualityByCity)에 불변 병합한다.
+      const fetchedEntries = responses.map((response, index) => {
+        const city = targets[index]
+        const {
+          list: [{ main: { aqi } = {}, components = {} }],
+        } = response.data
+
+        return [
+          city.id,
+          {
+            aqi: aqi ?? null,
+            // 옵셔널 체이닝 + 널 병합: 특정 성분이 응답에 없어도 화면이 깨지지 않게 기본값 0을 준다.
+            pm2_5: components?.pm2_5 ?? 0,
+            pm10: components?.pm10 ?? 0,
+            o3: components?.o3 ?? 0,
+          },
+        ]
+      })
+
+      airQualityByCity.value = {
+        ...airQualityByCity.value,
+        ...Object.fromEntries(fetchedEntries),
+      }
+    } catch {
+      airQualityError.value = '대기질 정보를 불러오지 못했습니다.'
+    } finally {
+      isLoadingAirQuality.value = false
+    }
+  }
+
+  // [과제 확장 - 도시 정보 API 로직]
+  // 도시별 "현지 시각"(timeapi.io)과 "위키백과 요약"(Wikipedia REST API)을 함께 조회한다.
+  // 두 API는 서로 무관하므로 하나가 실패해도(예: 검색으로 추가된 도시는 timezone이 없음,
+  // 위키에 문서가 없는 도시) 나머지 하나는 살리기 위해 Promise.all이 아니라 Promise.allSettled를 쓴다.
+  async function fetchCityInsights(cities) {
+    if (!cities || cities.length === 0) return
+
+    const targets = cities.filter((city) => !cityInsightsByCity.value[city.id])
+    if (targets.length === 0) return
+
+    isLoadingCityInsights.value = true
+    cityInsightsError.value = ''
+
+    try {
+      // 도시마다 [현지 시각, 위키 요약] 두 요청을 병렬로 보내고, 도시들끼리도 Promise.all로 동시에 처리한다.
+      const results = await Promise.all(
+        targets.map(async (city) => {
+          const [timeResult, wikiResult] = await Promise.allSettled([
+            city.timezone
+              ? axios.get(TIME_API_URL, { params: { timeZone: city.timezone } })
+              : Promise.reject(new Error('타임존 정보 없음')),
+            // "파리"(도시) vs "파리"(곤충)처럼 동음이의어 문서가 걸리는 경우까지 처리하는 헬퍼.
+            resolveWikipediaSummary(city),
+          ])
+
+          // 구조분해로 필요한 필드만 꺼낸다. 실패한 요청은 null로 남겨 화면에서 옵셔널 체이닝으로 처리한다.
+          let localTime = null
+          if (timeResult.status === 'fulfilled') {
+            const { hour, minute, dayOfWeek } = timeResult.value.data
+            localTime = { hour, minute, dayOfWeek }
+          }
+
+          let wiki = null
+          if (wikiResult.status === 'fulfilled') {
+            const { extract, thumbnail } = wikiResult.value.data
+            wiki = { extract, thumbnail: thumbnail?.source ?? null }
+          }
+
+          return [city.id, { localTime, wiki }]
+        }),
+      )
+
+      // Object.fromEntries + 스프레드로 [id, 데이터] 쌍 배열을 기존 캐시에 불변 병합한다.
+      cityInsightsByCity.value = {
+        ...cityInsightsByCity.value,
+        ...Object.fromEntries(results),
+      }
+    } catch {
+      cityInsightsError.value = '도시 정보를 불러오지 못했습니다.'
+    } finally {
+      isLoadingCityInsights.value = false
     }
   }
 
@@ -429,10 +644,20 @@ export const useWeatherStore = defineStore('weather', () => {
     currentLocationSource,
     currentLocationLoading,
     currentLocationError,
+    // [과제 확장 - 대기질 상태/액션] 컴포저블·뷰에서 쓸 수 있도록 함께 반환한다.
+    airQualityByCity,
+    isLoadingAirQuality,
+    airQualityError,
+    // [과제 확장 - 도시 정보 상태/액션] 컴포저블·뷰에서 쓸 수 있도록 함께 반환한다.
+    cityInsightsByCity,
+    isLoadingCityInsights,
+    cityInsightsError,
     fetchWeatherList,
     searchCity,
     addCityToDashboard,
     fetchCityForecast,
+    fetchAirQuality,
+    fetchCityInsights,
     fetchWeatherByCoordinates,
     fetchApproximateLocationWeather,
   }

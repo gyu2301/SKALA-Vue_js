@@ -4,6 +4,8 @@
  * 선택한 도시의 실시간 관측값, 생활 날씨 알림, 24시간 그래프,
  * 아침·점심·오후·저녁 옷차림을 한 페이지에서 보여준다.
  * ElCard, ElTag, ElSkeleton, ElAlert, ElEmpty, ElButton을 화면 상태와 정보 구조에 활용했다.
+ *
+ * [과제 확장 - 도시 정보] 현지 시각(timeapi.io)과 위키백과 요약을 히어로/새 섹션에 추가했다.
  */
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -21,13 +23,31 @@ const weatherStore = useWeatherStore()
 const city = computed(() => weatherList.value.find((item) => item.id === route.params.cityId) ?? null)
 
 // [24시간 예보] 도시 데이터가 준비되면 해당 좌표의 예보를 자동으로 조회한다.
+// [과제 확장 - 도시 정보] 같은 시점에 현지 시각·위키 요약도 함께 요청한다.
 watch(
   city,
   (value) => {
-    if (value) weatherStore.fetchCityForecast(value)
+    if (value) {
+      weatherStore.fetchCityForecast(value)
+      weatherStore.fetchCityInsights([value])
+    }
   },
   { immediate: true },
 )
+
+// [과제 확장 - 도시 정보] 캐시된 현지 시각·위키 요약을 꺼내 화면에서 바로 쓸 수 있게 가공한다.
+const cityInsight = computed(() => weatherStore.cityInsightsByCity[route.params.cityId] ?? null)
+const localTimeLabel = computed(() => {
+  const time = cityInsight.value?.localTime
+  if (!time) return null
+  // Modern JS 포인트) padStart로 "9:5" 대신 "09:05" 두 자리 형식을 만든다.
+  return `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}`
+})
+const isDaytime = computed(() => {
+  const hour = cityInsight.value?.localTime?.hour
+  return hour == null ? null : hour >= 6 && hour < 18
+})
+const wikipediaUrl = computed(() => (city.value ? `https://ko.wikipedia.org/wiki/${encodeURIComponent(city.value.name)}` : ''))
 
 const toDisplayTemp = (celsius) => {
   if (configStore.unit === 'fahrenheit') return Math.round((celsius * 9) / 5 + 32)
@@ -112,6 +132,32 @@ const dayParts = computed(() => {
         <div class="hero-metrics">
           <div><span>💧 습도</span><strong>{{ city.humidity }}%</strong></div>
           <div><span>🌬️ 풍속</span><strong>{{ city.wind }}m/s</strong></div>
+          <!-- [과제 확장 - 도시 정보] 타임존 정보가 없는 검색 도시는 시각 배지를 생략한다. -->
+          <div v-if="localTimeLabel">
+            <span>{{ isDaytime ? '☀️' : '🌙' }} 현지 시각</span><strong>{{ localTimeLabel }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- [과제 확장 - 도시 정보] 위키백과 요약 카드. 아직 못 불러왔으면 조용히 숨긴다. -->
+      <section v-if="cityInsight?.wiki" class="city-info-section">
+        <div class="section-heading">
+          <div>
+            <span>CITY INFO</span>
+            <h3>{{ city.name }}에 관하여</h3>
+          </div>
+        </div>
+        <div class="city-info-body">
+          <img
+            v-if="cityInsight.wiki.thumbnail"
+            :src="cityInsight.wiki.thumbnail"
+            :alt="city.name"
+            class="city-info-thumbnail"
+          />
+          <div>
+            <p>{{ cityInsight.wiki.extract }}</p>
+            <a :href="wikipediaUrl" target="_blank" rel="noopener noreferrer">위키백과에서 더 보기 →</a>
+          </div>
         </div>
       </section>
 
@@ -270,16 +316,51 @@ const dayParts = computed(() => {
 
 .tip-section,
 .outfit-section,
+.city-info-section,
 .forecast-card {
   margin-bottom: 18px;
 }
 
 .tip-section,
-.outfit-section {
+.outfit-section,
+.city-info-section {
   padding: 22px;
   border: 1px solid #e4eaf1;
   border-radius: 18px;
   background: #fff;
+}
+
+/* [과제 확장 - 도시 정보] 위키 썸네일 + 요약 텍스트를 나란히 배치한다. */
+.city-info-body {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.city-info-thumbnail {
+  width: 100%;
+  height: 140px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.city-info-body p {
+  margin: 0 0 8px;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.city-info-body a {
+  color: #337ecc;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.city-info-body a:hover {
+  text-decoration: underline;
 }
 
 .section-heading {
@@ -430,6 +511,10 @@ const dayParts = computed(() => {
 
   .outfit-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .city-info-body {
+    grid-template-columns: 1fr;
   }
 }
 
